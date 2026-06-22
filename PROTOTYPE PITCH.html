@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CANVAS — Beauty, Matched.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#FAF8F4;--warm:#FFFDF9;--ink:#1A1714;--ink-m:#5C5650;--ink-f:#9B9590;
+  --gold:#C9A84C;--gold-l:#F0E3C0;--gold-p:#FBF6EC;--plum:#4B1D5A;--plum-l:#7A3A8A;
+  --rose:#D4899A;--border:rgba(26,23,20,0.1);--border-s:rgba(26,23,20,0.2);
+  --fd:'Cormorant Garamond',Georgia,serif;--fb:'Inter',system-ui,sans-serif;
+  --r:12px;--rp:100px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--fb);background:var(--cream);color:var(--ink);line-height:1.6;overflow-x:hidden}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 48px;height:68px;background:rgba(250,248,244,0.94);backdrop-filter:blur(16px);border-bottom:0.5px solid var(--border)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo svg{width:38px;height:38px}
+.nav-wordmark{font-family:var(--fd);font-size:22px;font-weight:600;letter-spacing:0.06em;color:var(--ink)}
+.nav-links{display:flex;gap:32px;align-items:center}
+.nav-links a{font-size:13px;color:var(--ink-m);text-decoration:none;letter-spacing:0.02em;transition:color .2s}
+.nav-links a:hover{color:var(--ink)}
+.nav-cta{background:var(--plum)!important;color:#FAF7F2!important;padding:8px 20px;border-radius:var(--rp);font-size:13px!important;font-weight:500!important;transition:opacity .2s!important}
+.nav-cta:hover{opacity:.85}
+
+/* SECTIONS */
+section{padding:100px 48px}
+.container{max-width:1100px;margin:0 auto}
+
+/* HERO */
+#hero{min-height:100vh;display:flex;align-items:center;padding:120px 48px 80px;background:var(--warm);position:relative;overflow:hidden}
+.hero-bg{position:absolute;top:50%;right:-60px;transform:translateY(-50%);opacity:.04;pointer-events:none;user-select:none}
+.hero-bg svg{width:580px;height:580px}
+.hero-inner{max-width:1100px;margin:0 auto;width:100%;position:relative;z-index:1;display:grid;grid-template-columns:1fr 420px;gap:64px;align-items:center}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--plum);border:0.5px solid rgba(75,29,90,.2);padding:6px 14px;border-radius:var(--rp);background:rgba(75,29,90,.06);margin-bottom:28px}
+.hero-eyebrow span{width:5px;height:5px;border-radius:50%;background:var(--plum)}
+h1{font-family:var(--fd);font-size:clamp(52px,6.5vw,88px);font-weight:300;line-height:1.0;color:var(--ink);letter-spacing:-.02em;margin-bottom:24px}
+h1 em{font-style:italic;color:var(--plum)}
+.hero-sub{font-size:16px;line-height:1.75;color:var(--ink-m);margin-bottom:44px;font-weight:300}
+.hero-actions{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.btn-primary{background:var(--plum);color:#FAF7F2;padding:13px 30px;border-radius:var(--rp);font-size:14px;font-weight:500;text-decoration:none;transition:opacity .2s;display:inline-block}
+.btn-primary:hover{opacity:.85}
+.btn-secondary{color:var(--ink-m);font-size:14px;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:color .2s}
+.btn-secondary:hover{color:var(--ink)}
+.btn-secondary::after{content:'→'}
+.hero-stats{display:flex;gap:40px;margin-top:56px;padding-top:40px;border-top:0.5px solid var(--border)}
+.stat-number{font-family:var(--fd);font-size:38px;font-weight:400;color:var(--ink);line-height:1}
+.stat-label{font-size:12px;color:var(--ink-f);margin-top:4px;letter-spacing:.04em}
+.hero-logo-showcase{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+.hero-logo-showcase svg{width:360px;height:auto;filter:drop-shadow(0 20px 60px rgba(75,29,90,.18))}
+.hero-tagline{font-family:var(--fd);font-size:13px;letter-spacing:.2em;color:var(--plum);text-transform:uppercase;font-weight:400}
+
+/* SECTION LABELS */
+.section-eyebrow{font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--plum);margin-bottom:16px}
+h2{font-family:var(--fd);font-size:clamp(36px,5vw,56px);font-weight:300;line-height:1.1;color:var(--ink);letter-spacing:-.02em;margin-bottom:20px}
+h2 em{font-style:italic;color:var(--plum)}
+.section-lead{font-size:16px;color:var(--ink-m);line-height:1.7;max-width:540px;font-weight:300}
+h3{font-family:var(--fd);font-size:22px;font-weight:400;color:var(--ink);margin-bottom:10px}
+
+/* HOW IT WORKS */
+#how{background:var(--cream)}
+.steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:2px;margin-top:56px;border:0.5px solid var(--border);border-radius:var(--r);overflow:hidden}
+.step-card{background:var(--warm);padding:36px 28px;transition:background .3s}
+.step-card:hover{background:rgba(75,29,90,.04)}
+.step-num{font-family:var(--fd);font-size:60px;font-weight:300;color:rgba(75,29,90,.15);line-height:1;margin-bottom:20px}
+.step-card p{font-size:14px;color:var(--ink-m);line-height:1.7;font-weight:300}
+
+/* FEATURES */
+#features{background:var(--plum)}
+#features .section-eyebrow{color:var(--gold)}
+#features h2{color:#FAF7F2}
+#features h2 em{color:var(--gold)}
+#features .section-lead{color:rgba(250,247,242,.55)}
+.features-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-top:56px;border:0.5px solid rgba(255,255,255,.1);border-radius:var(--r);overflow:hidden}
+.feature-card{background:rgba(255,255,255,.05);padding:36px;transition:background .3s}
+.feature-card:hover{background:rgba(201,168,76,.1)}
+.feature-card.featured{background:rgba(201,168,76,.12)}
+.feature-icon{width:42px;height:42px;border-radius:8px;background:rgba(201,168,76,.18);display:flex;align-items:center;justify-content:center;margin-bottom:20px;font-size:19px}
+.feature-tag{display:inline-block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);background:rgba(201,168,76,.18);padding:3px 10px;border-radius:var(--rp);margin-bottom:14px}
+.feature-card h3{color:#FAF7F2;font-size:21px;margin-bottom:10px}
+.feature-card p{font-size:14px;color:rgba(250,247,242,.5);line-height:1.7;font-weight:300}
+.feature-card.wide{grid-column:span 2}
+
+/* AI DEMO & WIDGET */
+#demo{background:var(--plum)}
+#demo .section-eyebrow{color:var(--gold)}
+#demo h2{color:#FAF7F2}
+#demo h2 em{color:var(--gold)}
+#demo .section-lead{color:rgba(250,247,242,.55)}
+
+.wdg {
+  background: rgba(255,255,255,0.03);
+  border-radius: 16px;
+  padding: 32px;
+  width: 100%;
+  max-width: 420px;
+  border: 0.5px solid rgba(255,255,255,0.12);
+  margin: 0 auto;
+}
+.uz {
+  border: 1.5px dashed var(--gold);
+  border-radius: 12px;
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(201,168,76,.05);
+  transition: background .2s;
+  margin-bottom: 20px;
+}
+.uz:hover { background: rgba(201,168,76,.1); }
+.uzi { font-size: 28px; margin-bottom: 8px; }
+.uzt { font-family: var(--fd); font-style: italic; font-size: 19px; color: #FAF7F2; margin-bottom: 4px; line-height: 1.2; }
+.uzs { font-size: 13px; font-weight: 300; color: rgba(250,247,242,.6); line-height: 1.5; }
+.orr { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.orl { flex: 1; height: 1px; background: rgba(201,168,76,.2); }
+.ort { font-size: 12px; color: rgba(250,247,242,.6); font-weight: 300; }
+.wta {
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 0.5px solid rgba(201,168,76,.25);
+  border-radius: 8px;
+  padding: 12px;
+  color: #FAF7F2;
+  font-family: var(--fb);
+  font-size: 14px;
+  font-weight: 300;
+  resize: none;
+  height: 80px;
+  outline: none;
+  line-height: 1.6;
+  transition: border-color .2s;
+}
+.wta::placeholder { color: rgba(250,247,242,.4); }
+.wta:focus { border-color: var(--gold); }
+.wlb { font-size: 11px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: rgba(250,247,242,.7); margin-bottom: 10px; margin-top: 20px; display: block; }
+.pls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.pl { font-family: var(--fb); font-size: 12px; font-weight: 400; padding: 6px 14px; border-radius: var(--rp); border: 0.5px solid rgba(201,168,76,.4); color: rgba(250,247,242,.8); background: transparent; cursor: pointer; transition: all .2s; }
+.pl.on, .pl:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+.wcb { width: 100%; background: var(--gold); color: var(--ink); font-family: var(--fb); font-size: 14px; font-weight: 500; border: none; padding: 14px; border-radius: 8px; cursor: pointer; transition: opacity .2s; }
+.wcb:hover { opacity: .85; }
+.wfr { font-size: 12px; font-weight: 300; color: rgba(250,247,242,.5); text-align: center; margin-top: 12px; }
+#uprev { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; display: none; border: 0.5px solid rgba(201,168,76,.3); }
+
+.ai-thinking{font-size:13px;color:rgba(250,247,242,.5);display:none;align-items:center;justify-content:center;gap:8px;padding:10px 0}
+.ai-thinking.visible{display:flex}
+.dot-anim{display:flex;gap:4px}
+.dot-anim span{width:4px;height:4px;border-radius:50%;background:var(--gold);animation:pulse 1.2s infinite}
+.dot-anim span:nth-child(2){animation-delay:.2s}
+.dot-anim span:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{opacity:.3}40%{opacity:1}}
+
+.ai-results{display:none; width:100%; max-width:800px; margin: 0 auto;}
+.ai-results.visible{display:block}
+.match-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.match-card{background:rgba(255,255,255,.07);border:0.5px solid rgba(255,255,255,.14);border-radius:var(--r);overflow:hidden; text-align:left;}
+.match-card.top-match{border-color:var(--gold);background:rgba(201,168,76,.12)}
+.match-card img{width:100%;aspect-ratio:1;object-fit:cover;display:block;filter:grayscale(30%)}
+.match-info{padding:16px}
+.match-score{font-family:var(--fd);font-size:28px;font-weight:400;color:var(--gold)}
+.match-name{font-size:15px;color:#FAF7F2;margin-top:2px; font-weight:500;}
+.match-why{font-size:12px;color:rgba(250,247,242,.6);margin-top:5px;line-height:1.5}
+.match-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);background:rgba(201,168,76,.2);padding:4px 10px;border-radius:var(--rp);display:inline-block;margin-bottom:7px; margin-right: 4px;}
+
+/* COMPARE */
+#why{background:var(--cream)}
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:44px}
+.compare-card{border-radius:var(--r);padding:32px}
+.compare-card.before{background:var(--warm);border:0.5px solid var(--border)}
+.compare-card.after{background:var(--plum);color:#FAF7F2}
+.compare-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-weight:500;margin-bottom:18px}
+.compare-card.before .compare-label{color:var(--ink-f)}
+.compare-card.after .compare-label{color:var(--gold)}
+.compare-item{display:flex;align-items:flex-start;gap:11px;margin-bottom:13px;font-size:14px;line-height:1.5}
+.compare-card.before .compare-item{color:var(--ink-m)}
+.compare-card.after .compare-item{color:rgba(250,247,242,.8)}
+.icon-x{color:#C97A6B;font-size:15px;margin-top:1px;flex-shrink:0}
+.icon-check{color:var(--gold);font-size:15px;margin-top:1px;flex-shrink:0}
+
+/* CTA & FOOTER */
+#cta{background:var(--plum);text-align:center;padding:120px 48px}
+#cta h2{color:#FAF7F2;margin:0 auto 18px;max-width:600px}
+#cta h2 em{color:var(--gold)}
+#cta .section-lead{color:rgba(250,247,242,.5);margin:0 auto 44px}
+.cta-buttons{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
+.btn-gold{background:var(--gold);color:var(--ink);padding:13px 30px;border-radius:var(--rp);font-size:14px;font-weight:500;text-decoration:none;transition:opacity .2s;display:inline-block}
+.btn-gold:hover{opacity:.85}
+.btn-outline{color:rgba(250,247,242,.7);border:0.5px solid rgba(255,255,255,.25);padding:13px 30px;border-radius:var(--rp);font-size:14px;text-decoration:none;transition:all .2s}
+.btn-outline:hover{color:#FAF7F2;border-color:rgba(255,255,255,.5)}
+footer{background:var(--cream);border-top:0.5px solid var(--border);padding:36px 48px;display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink-f);flex-wrap:wrap;gap:14px}
+.footer-logo-wrap{display:flex;align-items:center;gap:8px}
+.footer-brand{font-family:var(--fd);font-size:17px;font-weight:500;color:var(--ink)}
+
+@media(max-width:768px){
+  nav{padding:0 20px}
+  .nav-links{display:none}
+  section{padding:68px 20px}
+  #hero{padding:96px 20px 56px}
+  .hero-inner{grid-template-columns:1fr}
+  .hero-logo-showcase{display:none}
+  .features-grid{grid-template-columns:1fr}
+  .feature-card.wide{grid-column:span 1}
+  .compare-grid{grid-template-columns:1fr}
+  .hero-stats{gap:24px;flex-wrap:wrap}
+  footer{text-align:center;justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#hero" class="nav-logo">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" rx="20" fill="#4B1D5A"/>
+      <path d="M65 35 C50 35 40 45 40 60 C40 75 50 85 65 85 C55 85 45 75 45 60 C45 45 55 35 65 35 Z" fill="#C9A84C"/>
+    </svg>
+    <span class="nav-wordmark">CANVAS</span>
+  </a>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#demo">AI Demo</a>
+    <a href="#cta" class="nav-cta">Join waitlist</a>
+  </div>
+</nav>
+
+<section id="hero">
+  <div class="hero-bg">
+    <svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#4B1D5A"/>
+          <stop offset="100%" stop-color="#4B1D5A"/>
+        </linearGradient>
+        <clipPath id="bc"><circle cx="500" cy="420" r="230"/></clipPath>
+      </defs>
+      <rect x="195" y="80" width="610" height="620" rx="32" fill="none" stroke="#4B1D5A" stroke-width="6"/>
+      <circle cx="500" cy="420" r="230" fill="#4B1D5A"/>
+      <path d="M500 190 C420 190 310 270 310 420 C310 570 420 650 500 650 C440 650 360 580 360 420 C360 280 440 230 500 230 Z" fill="#4B1D5A"/>
+      <g transform="translate(500,690) rotate(-42)"><rect x="-95" y="-7" width="180" height="13" rx="6" fill="#4B1D5A"/><ellipse cx="84" cy="0" rx="24" ry="18" fill="#4B1D5A"/></g>
+      <g transform="translate(500,690) rotate(42)"><rect x="-95" y="-7" width="180" height="13" rx="6" fill="#4B1D5A"/><ellipse cx="84" cy="0" rx="24" ry="18" fill="#4B1D5A"/></g>
+    </svg>
+  </div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-eyebrow"><span></span>AI-Powered Beauty Marketplace</div>
+      <h1>Beauty matched<br>to <em>you,</em><br>not just available.</h1>
+      <p class="hero-sub">CANVAS connects you with the exact makeup artist whose style fits your inspiration - not whoever happens to be free. Upload a Pinterest board. Get a 94% match in seconds.</p>
+      <div class="hero-actions">
+        <a href="#demo" class="btn-primary">Try the AI match</a>
+        <a href="#how" class="btn-secondary">See how it works</a>
+      </div>
+      <div class="hero-stats">
+        <div><div class="stat-number">94%</div><div class="stat-label">Trial-to-booking rate</div></div>
+        <div><div class="stat-number">5</div><div class="stat-label">Cities, growing</div></div>
+        <div><div class="stat-number">₹12.8L</div><div class="stat-label">Revenue this month</div></div>
+        <div><div class="stat-number">88%</div><div class="stat-label">Avg. conversion</div></div>
+      </div>
+    </div>
+    
+    <div class="hero-logo-showcase">
+      <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="400" rx="60" fill="#4B1D5A"/>
+        <path d="M260 140 C200 140 160 180 160 240 C160 300 200 340 260 340 C220 340 180 300 180 240 C180 180 220 140 260 140 Z" fill="#C9A84C"/>
+      </svg>
+      <div class="hero-tagline">BEAUTY, MATCHED</div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="container">
+    <div class="section-eyebrow">The Engine</div>
+    <h2>Goodbye endless scrolling.<br><em>Hello deterministic matching.</em></h2>
+    <p class="section-lead">We replaced the standard directory search with a deterministic visual parsing engine. You bring the vision, we do the vetting.</p>
+    
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <h3>Visual Parsing</h3>
+        <p>Upload any reference image. Our engine breaks down the look by aesthetic, technique, and mood rather than basic text tags.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <h3>Portfolio Intersection</h3>
+        <p>The system cross-references your image's data points against our legally cleared, verified artist portfolio database.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <h3>Frictionless Booking</h3>
+        <p>Review the top 3 matches, verify their credentials, and connect directly via a pre-filled WhatsApp deep link.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="demo">
+  <div class="container">
+    <div class="section-eyebrow">Interactive Demo</div>
+    <h2>Try the <em>AI Matchmaker</em></h2>
+    <p class="section-lead">Upload a reference photo or describe what you're looking for. Our deterministic engine will read the inputs and match you with the right artists instantly.</p>
+    
+    <div style="display: flex; flex-direction: column; align-items: center; margin-top: 44px; text-align: left;">
+      
+      <div class="wdg">
+        <div class="uz" onclick="document.getElementById('finput').click()">
+          <input type="file" id="finput" accept="image/*" onchange="handleUp(event)" style="display:none">
+          <img id="uprev" alt="preview">
+          <div id="upph">
+            <div class="uzi">📷</div>
+            <p class="uzt">Drop your reference photo</p>
+            <p class="uzs">A screenshot, Pinterest save - anything showing the look you want</p>
+          </div>
+        </div>
+        <div class="orr"><div class="orl"></div><span class="ort">or describe it</span><div class="orl"></div></div>
+        <textarea class="wta" id="lookdesc" placeholder="e.g. soft dewy skin, defined eyes, nude lips - very minimal and clean..."></textarea>
+        <span class="wlb">What's the occasion?</span>
+        <div class="pls">
+          <button class="pl on" onclick="tpl(this)">Wedding</button>
+          <button class="pl" onclick="tpl(this)">Shoot</button>
+          <button class="pl" onclick="tpl(this)">Party</button>
+          <button class="pl" onclick="tpl(this)">Editorial</button>
+          <button class="pl" onclick="tpl(this)">Everyday</button>
+        </div>
+        <button class="wcb" id="run-match-btn">🔍 Match me with artists</button>
+        <p class="wfr">Free to use · No account needed to search</p>
+      </div>
+
+      <div class="ai-thinking" style="margin-top: 32px;">
+        <div class="dot-anim"><span></span><span></span><span></span></div>
+        Parsing visual tags, budget, and location...
+      </div>
+
+      <div class="ai-results" style="margin-top: 40px;">
+        <div class="match-cards">
+          <div class="match-card top-match">
+            <img src="https://images.unsplash.com/photo-1512496015851-a1e1136b85cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Artist">
+            <div class="match-info">
+              <div class="match-score">94%</div>
+              <div class="match-name">Facestory by Tusya</div>
+              <div class="match-why">Matches "soft dewy skin", "minimal eyes"</div>
+              <div style="margin-top:12px;">
+                <span class="match-label">Pune</span>
+                <span class="match-label">₹12,000</span>
+              </div>
+            </div>
+          </div>
+          <div class="match-card">
+            <img src="https://images.unsplash.com/photo-1522337660859-02fbefca4702?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Artist">
+            <div class="match-info">
+              <div class="match-score">88%</div>
+              <div class="match-name">Geetanjali Artistry</div>
+              <div class="match-why">Matches "minimal eyes", "clean look"</div>
+              <div style="margin-top:12px;">
+                <span class="match-label">Pune</span>
+                <span class="match-label">₹8,000</span>
+              </div>
+            </div>
+          </div>
+          <div class="match-card">
+            <img src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Artist">
+            <div class="match-info">
+              <div class="match-score">82%</div>
+              <div class="match-name">Womaniya Salon</div>
+              <div class="match-why">Matches "soft dewy skin"</div>
+              <div style="margin-top:12px;">
+                <span class="match-label">Pune</span>
+                <span class="match-label">₹10,000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="container">
+    <div class="section-eyebrow">The Business Model</div>
+    <h2>Verification is our <em>moat.</em></h2>
+    <p class="section-lead">We aren't just a directory. We are a closed-network verification engine that solves the biggest pain point in the beauty industry: trust.</p>
+    
+    <div class="features-grid">
+      <div class="feature-card featured wide">
+        <div class="feature-tag">Core Advantage</div>
+        <h3>Zero Catfishing</h3>
+        <p>Every artist on CANVAS is verified. We authenticate academy certifications, past runway credits, and ensure all portfolio imagery is legally cleared and actually belongs to the artist.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🛡️</div>
+        <h3>Escrow Protection</h3>
+        <p>Bridal deposits are held in a secure escrow. Clients are protected from last-minute cancellations, and artists are protected from non-paying clients.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <h3>High-Intent Leads</h3>
+        <p>By the time an artist receives a WhatsApp message, the AI has already confirmed the client's budget, location, and aesthetic match. Zero wasted time.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="container">
+    <div class="section-eyebrow">Market Gap</div>
+    <h2>Why the current system <em>is broken.</em></h2>
+    
+    <div class="compare-grid">
+      <div class="compare-card before">
+        <div class="compare-label">Traditional Directories</div>
+        <div class="compare-item"><span class="icon-x">✕</span> Rely on text search (e.g. "Bridal makeup Mumbai")</div>
+        <div class="compare-item"><span class="icon-x">✕</span> Portfolios filled with stolen Pinterest images</div>
+        <div class="compare-item"><span class="icon-x">✕</span> Fake 5-star reviews bought in bulk</div>
+        <div class="compare-item"><span class="icon-x">✕</span> Endless back-and-forth about pricing and dates</div>
+      </div>
+      <div class="compare-card after">
+        <div class="compare-label">The Canvas Model</div>
+        <div class="compare-item"><span class="icon-check">✓</span> Deterministic visual parsing engine</div>
+        <div class="compare-item"><span class="icon-check">✓</span> Legally cleared, authenticated portfolios only</div>
+        <div class="compare-item"><span class="icon-check">✓</span> Verification badges based on real academy credentials</div>
+        <div class="compare-item"><span class="icon-check">✓</span> Automated budget and style filtering before contact</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="for-artists">
+  <div class="container">
+    <div class="section-eyebrow">Supply Side</div>
+    <h2>Built for the <em>creator class.</em></h2>
+    <p class="section-lead">We offer a Freemium Lead-Gen model. It's completely free for artists to list. They only pay a micro-fee to unlock high-intent leads.</p>
+    
+    <div class="artist-benefits">
+      <div class="benefit-card">
+        <div class="benefit-num">01</div>
+        <h3>Free Listing</h3>
+        <p>Verified artists get a premium profile showcasing their exact styling specialties and awards at zero cost.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-num">02</div>
+        <h3>Micro-Fee Leads</h3>
+        <p>When matched, artists receive a blurred notification. They pay ₹99 to unlock the client's WhatsApp and reference photo.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-num">03</div>
+        <h3>Canvas Pro</h3>
+        <p>A monthly SaaS subscription (₹999) unlocks unlimited leads, priority AI ranking, and deep portfolio analytics.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="cta">
+  <div class="container">
+    <h2>The future of beauty booking is <em>verified.</em></h2>
+    <p class="section-lead">Join the closed beta and experience the deterministic matching engine.</p>
+    <div class="cta-buttons">
+      <a href="#" class="btn-gold">Join the Client Waitlist</a>
+      <a href="#" class="btn-outline">Apply as an Artist</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo-wrap">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100" height="100" rx="20" fill="#4B1D5A"/>
+      <path d="M65 35 C50 35 40 45 40 60 C40 75 50 85 65 85 C55 85 45 75 45 60 C45 45 55 35 65 35 Z" fill="#C9A84C"/>
+    </svg>
+    <span class="footer-brand">CANVAS</span>
+  </div>
+  <div>© 2026 Canvas Tech. All rights reserved.</div>
+</footer>
+
+<script>
+  // Image Upload Preview for the AI Widget
+  function handleUp(e) {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      document.getElementById('uprev').src = ev.target.result;
+      document.getElementById('uprev').style.display = 'block';
+      document.getElementById('upph').style.display = 'none';
+    };
+    r.readAsDataURL(f);
+  }
+
+  // Tag Toggle for the AI Widget
+  function tpl(el) {
+    el.classList.toggle('on');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // ----------------------------------------
+    // AI Demo Trigger Logic
+    // ----------------------------------------
+    const matchBtn = document.getElementById('run-match-btn');
+    const aiThinking = document.querySelector('.ai-thinking');
+    const aiResults = document.querySelector('.ai-results');
+
+    if(matchBtn) {
+      matchBtn.addEventListener('click', () => {
+        // Reset state
+        aiResults.classList.remove('visible');
+        
+        // Show thinking animation
+        aiThinking.classList.add('visible');
+        matchBtn.style.opacity = '0.5';
+        matchBtn.textContent = 'Processing...';
+        
+        // Simulate deterministic AI processing delay
+        setTimeout(() => {
+          aiThinking.classList.remove('visible');
+          aiResults.classList.add('visible');
+          matchBtn.style.opacity = '1';
+          matchBtn.textContent = '🔍 Match me with artists';
+          
+          // Scroll results into view
+          aiResults.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 1800);
+      });
+    }
+  });
+</script>
+
+</body>
+</html>

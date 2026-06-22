@@ -1,0 +1,2198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>CANVAS | Delhi</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<style>
+/* ════════════════════════════════════════════════════════════════════════
+   CANVAS — PREMIUM CSS PASS
+   Drop-in replacement for the existing block.
+   No selectors renamed, no classes removed — every hook your JS uses
+   (.on, .open, .show, .solid, .has-image, .drag-active, etc.) is intact.
+   ════════════════════════════════════════════════════════════════════════ */
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+/* ── DESIGN TOKENS ─────────────────────────────────────────────────────
+   Palette deepened by a few % across the board: the purples lean more
+   "ink" than "candy", the gold leans antique/champagne rather than
+   yellow-metal. Added a small system of shadows/radii/easings so every
+   hover and transition in the file reads as one considered language
+   instead of one-off values.                                            */
+:root{
+  /* core palette — refined */
+  --dp:#150420;        /* deep plum-ink (was #1A0526) */
+  --rp:#33103E;        /* rich aubergine (was #2D0A3E) */
+  --mp:#73348F;        /* orchid (was #6B2D8B) */
+  --sp:#C9ACDA;        /* soft lilac (was #C4A8D4) */
+  --pp:#F0E4F7;        /* pale lilac wash (was #EDE0F5) */
+
+  --g:#C9A463;         /* antique/champagne gold (was #C8A15A) */
+  --gl:#F6E8C4;        /* pale gold highlight (was #F7E7B3) */
+  --gd:#7C5916;         /* bronze (was #8B6914) */
+
+  --iv:#FBF8F2;        /* ivory bg (was #FAF7F2) */
+  --cr:#F1E9DC;        /* cream section bg (was #F2EBE0) */
+  --wh:#FFFFFF;
+  --bd:#E7DCC8;        /* warm hairline border (was #E8E0D5) */
+
+  --mut:#5C3D6E;       /* muted plum body copy (replaces scattered #5A3A6B) */
+
+  /* motion */
+  --ease:cubic-bezier(.16,1,.3,1);
+  --ease-soft:cubic-bezier(.4,0,.2,1);
+  --dur-s:.22s;
+  --dur-m:.45s;
+
+  /* elevation */
+  --shadow-xs:0 1px 2px rgba(21,4,32,.05);
+  --shadow-card:0 1px 2px rgba(21,4,32,.04), 0 14px 32px -10px rgba(21,4,32,.14);
+  --shadow-card-hover:0 4px 14px rgba(21,4,32,.08), 0 30px 60px -14px rgba(21,4,32,.26);
+  --shadow-gold:0 10px 30px -8px rgba(201,164,99,.4);
+  --shadow-modal:0 30px 80px -20px rgba(21,4,32,.45), 0 1px 0 rgba(255,255,255,.04) inset;
+
+  /* radii */
+  --r-s:8px;
+  --r-m:14px;
+  --r-l:22px;
+  --r-pill:999px;
+}
+
+html, body {
+  scroll-behavior: smooth;
+  font-family: "Jost", sans-serif;
+  background: var(--iv);
+  color: var(--dp);
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  letter-spacing: .005em;
+}
+img { max-width:100%; height:auto; display:block; }
+.page{display:none;min-height:100vh;}
+.page.active{display:block; animation: pageIn .5s var(--ease);}
+@keyframes pageIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+::selection{ background: var(--g); color: var(--dp); }
+
+/* Accessible focus ring — gold, consistent everywhere */
+a:focus-visible, button:focus-visible, input:focus-visible, [tabindex]:focus-visible{
+  outline: 2px solid var(--g);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── NAV ──────────────────────────────────────────────────────────────
+   Glass on scroll: translucent ivory + blur + a hairline gold rule
+   instead of a hard border, so it feels like frosted glass rather
+   than a slapped-on bar.                                               */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 3rem;height:72px;transition:background var(--dur-m) var(--ease), box-shadow var(--dur-m) var(--ease), border-color var(--dur-m) var(--ease);border-bottom:1px solid transparent;}
+nav.solid{background:rgba(251,248,242,.82);border-bottom-color:rgba(201,164,99,.35);backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%);box-shadow:0 1px 0 rgba(201,164,99,.15), 0 12px 30px -16px rgba(21,4,32,.18);}
+.nlogo{display:flex;align-items:center;gap:10px;cursor:pointer;transition:opacity var(--dur-s) var(--ease);}
+.nlogo:hover{opacity:.78;}
+.nlinks{display:flex;gap:2.25rem;}
+.nlinks a{font-size:13px;color:var(--rp);text-decoration:none;cursor:pointer;position:relative;padding-bottom:4px;letter-spacing:.02em;transition:color var(--dur-s) var(--ease);}
+.nlinks a:hover{color:var(--gd);}
+.nlinks a::after{content:"";position:absolute;bottom:0;left:0;width:0;height:1px;background:var(--g);transition:width var(--dur-m) var(--ease);}
+.nlinks a:hover::after{width:100%;}
+.nacts{display:flex;gap:1rem;align-items:center;}
+.bgs{font-size:13px;color:var(--rp);background:none;border:none;cursor:pointer;font-family:"Jost",sans-serif;transition:color var(--dur-s) var(--ease);}
+.bgs:hover{color:var(--gd);}
+.bg{background:var(--g);color:var(--dp);border:none;padding:10px 22px;border-radius:var(--r-s);font-family:"Jost",sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:background var(--dur-s) var(--ease), transform var(--dur-s) var(--ease), box-shadow var(--dur-s) var(--ease);}
+.bg:hover{background:#D9B86E;transform:translateY(-1px);box-shadow:var(--shadow-gold);}
+.bg:active{transform:translateY(0) scale(.98);}
+.bgo{background:transparent;color:var(--gd);border:1px solid var(--g);padding:9px 22px;border-radius:var(--r-s);font-family:"Jost",sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all var(--dur-s) var(--ease);}
+.bgo:hover{background:var(--g);color:var(--dp);transform:translateY(-1px);box-shadow:var(--shadow-gold);}
+
+/* ── HERO ─────────────────────────────────────────────────────────────
+   Same grid, more breathing room, a soft gold halo behind the artwork
+   so it doesn't sit flat against the ivory.                            */
+.hero{min-height:100vh;display:grid;grid-template-columns:1.1fr 0.9fr;padding-top:72px;background:
+  radial-gradient(ellipse 60% 50% at 85% 15%, rgba(201,164,99,.07), transparent 60%),
+  var(--iv);gap:2rem;}
+.hl{display:flex;flex-direction:column;justify-content:center;padding:5rem 0 5rem 5.5rem;}
+.hr{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 5.5rem 4rem 0; position:relative;}
+.ey{display:flex;align-items:center;gap:11px;font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--gd);margin-bottom:1.75rem;}
+.ey::before{content:"";width:26px;height:1px;background:linear-gradient(90deg,var(--g),transparent);display:block;}
+h1{font-family:"Cormorant Garamond",serif;font-size:clamp(40px,4.4vw,54px);font-weight:600;line-height:1.06;letter-spacing:-.01em;color:var(--rp);margin-bottom:1.6rem;}
+h1 em{font-style:italic;background:linear-gradient(100deg,var(--gd) 10%, var(--g) 50%, var(--gd) 90%);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hb{font-size:15.5px;line-height:1.85;color:var(--mut);max-width:460px;margin-bottom:.85rem;}
+.hcta{display:flex;gap:1rem;margin:2.1rem 0 2.6rem;flex-wrap:wrap;}
+.bgl{background:var(--g);color:var(--dp);border:none;padding:14px 32px;border-radius:var(--r-s);font-family:"Jost",sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background var(--dur-s) var(--ease), transform var(--dur-s) var(--ease), box-shadow var(--dur-s) var(--ease);}
+.bgl:hover{background:#D9B86E;transform:translateY(-2px);box-shadow:var(--shadow-gold);}
+.bgl:active{transform:translateY(0) scale(.98);}
+.bol{background:transparent;color:var(--gd);border:1px solid var(--g);padding:13px 28px;border-radius:var(--r-s);font-family:"Jost",sans-serif;font-size:14px;cursor:pointer;transition:all var(--dur-s) var(--ease);}
+.bol:hover{background:rgba(201,164,99,.12);border-color:var(--gd);transform:translateY(-2px);}
+.proof{display:flex;align-items:center;gap:13px;}
+.avs{display:flex;}
+.av{width:33px;height:33px;border-radius:50%;border:2px solid var(--iv);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;margin-left:-9px;box-shadow:var(--shadow-xs);transition:transform var(--dur-s) var(--ease);}
+.avs:hover .av{transform:translateY(-2px);}
+.av:first-child{margin-left:0;}
+.pt{font-size:12.5px;color:var(--mut);}
+.pt strong{color:var(--rp);font-weight:600;}
+
+@keyframes floaty{0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);}}
+
+/* ── GENERIC SECTIONS ─────────────────────────────────────────────────*/
+.sec{padding:6.5rem 5.5rem;}
+.sec.dark{background:
+  radial-gradient(ellipse 70% 60% at 15% 0%, rgba(115,52,143,.18), transparent 60%),
+  radial-gradient(ellipse 50% 50% at 100% 100%, rgba(201,164,99,.06), transparent 60%),
+  var(--dp);}
+.sec.cream{background:var(--cr);}
+.sec.gold-bg{background:linear-gradient(135deg, var(--g), #D9B86E);padding:4.5rem 5.5rem;}
+.shd{text-align:center;margin-bottom:4.25rem;}
+.slb{font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--g);margin-bottom:1.1rem;display:flex;align-items:center;justify-content:center;gap:11px;}
+.slb::before,.slb::after{content:"";display:block;width:26px;height:1px;background:linear-gradient(90deg,transparent,var(--g),transparent);}
+.slbd{color:var(--gd);}
+.slbd::before,.slbd::after{background:linear-gradient(90deg,transparent,var(--gd),transparent);}
+h2{font-family:"Cormorant Garamond",serif;font-size:clamp(30px,3.2vw,40px);font-weight:400;letter-spacing:-.005em;}
+.hw{color:#fff;}
+.hd{color:var(--rp);}
+
+/* ── LIVE DEMO / SEARCH MODULE ────────────────────────────────────────
+   This is the signature moment of the whole product — the AI reading
+   an inspiration photo — so it gets the most considered treatment:
+   a glass card with a slow-breathing gold edge, and a refined
+   scan/reveal sequence rather than a flat "loading" state.            */
+.canvas-search-module {
+  background: linear-gradient(180deg, rgba(255,255,255,.55), rgba(255,255,255,.32));
+  border: 1px solid rgba(201,164,99,.28);
+  border-radius: var(--r-l);
+  padding: 30px 34px;
+  max-width: 720px;
+  margin: 0 auto 40px;
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--dur-m) var(--ease);
+}
+.canvas-search-module:hover{ box-shadow: var(--shadow-card-hover); }
+
+.search-row { display:flex; gap:12px; align-items:center; margin-bottom:22px; }
+.search-input-wrap { flex:1; position:relative; display:flex; align-items:center; }
+.search-icon { position:absolute; left:15px; color:rgba(124,89,22,.55); pointer-events:none; }
+
+.canvas-query-input {
+  width:100%;
+  background: var(--wh);
+  border: 1px solid var(--bd);
+  border-radius: 11px;
+  padding: 14px 44px;
+  color: var(--dp);
+  font-family: 'Jost', sans-serif;
+  font-size: 0.92rem;
+  outline: none;
+  transition: border-color var(--dur-s) var(--ease), box-shadow var(--dur-s) var(--ease);
+}
+.canvas-query-input:focus {
+  border-color: var(--g);
+  box-shadow: 0 0 0 3px rgba(201,164,99,.16);
+}
+.canvas-query-input::placeholder { color: rgba(21,4,32,.4); }
+
+.search-clear-btn {
+  position:absolute; right:13px; background:none; border:none;
+  color: rgba(21,4,32,.4); cursor:pointer; font-size:.78rem; padding:5px 7px;
+  border-radius:4px; transition: color var(--dur-s) var(--ease), background var(--dur-s) var(--ease);
+}
+.search-clear-btn:hover { color: var(--gd); background: rgba(201,164,99,.1); }
+
+.canvas-search-btn {
+  display:flex; align-items:center; gap:9px;
+  background: linear-gradient(135deg, var(--g) 0%, var(--gd) 100%);
+  color: var(--dp); border:none; border-radius:11px; padding:14px 24px;
+  font-family:'Jost',sans-serif; font-size:.9rem; font-weight:600; cursor:pointer;
+  white-space:nowrap; letter-spacing:.01em;
+  box-shadow: 0 6px 18px -6px rgba(124,89,22,.45);
+  transition: transform var(--dur-s) var(--ease), box-shadow var(--dur-s) var(--ease), filter var(--dur-s) var(--ease);
+}
+.canvas-search-btn:hover  { transform: translateY(-2px); box-shadow: var(--shadow-gold); filter:brightness(1.04); }
+.canvas-search-btn:active { transform: translateY(0) scale(.98); }
+
+.search-divider { display:flex; align-items:center; gap:12px; margin-bottom:22px; }
+.divider-line { flex:1; height:1px; background:linear-gradient(90deg,transparent,rgba(201,164,99,.3),transparent); }
+.divider-text { font-size:.7rem; color: rgba(21,4,32,.45); text-transform:uppercase; letter-spacing:.12em; font-family:'Jost',sans-serif; white-space:nowrap; }
+
+/* Upload zone */
+.upload-zone {
+  border: 1.5px dashed rgba(201,164,99,.38);
+  border-radius: var(--r-m);
+  padding: 34px 24px;
+  text-align:center; cursor:pointer; position:relative; overflow:hidden;
+  min-height:160px; display:flex; align-items:center; justify-content:center;
+  margin-bottom:22px;
+  background: rgba(201,164,99,.045);
+  transition: border-color var(--dur-m) var(--ease), background var(--dur-m) var(--ease), box-shadow var(--dur-m) var(--ease);
+}
+.upload-zone:hover,
+.upload-zone:focus,
+.upload-zone.drag-active {
+  border-color: var(--g);
+  background: rgba(201,164,99,.1);
+  box-shadow: 0 0 0 4px rgba(201,164,99,.08);
+  outline:none;
+}
+.upload-zone.has-image { border-style:solid; border-color: rgba(201,164,99,.45); padding:0; box-shadow: var(--shadow-card); }
+
+.upload-icon-ring {
+  width:58px; height:58px; border:1.5px solid rgba(201,164,99,.35); border-radius:50%;
+  display:flex; align-items:center; justify-content:center; margin:0 auto 15px;
+  color: var(--gd); background: rgba(201,164,99,.08);
+  transition: transform var(--dur-m) var(--ease);
+}
+.upload-zone:hover .upload-icon-ring{ transform: translateY(-3px) scale(1.04); }
+
+.upload-headline { font-family:'Cormorant Garamond',serif; font-size:1.06rem; color: var(--rp); margin:0 0 6px; font-weight:600; }
+.upload-subtext { font-size:.78rem; color: var(--mut); font-family:'Jost',sans-serif; margin:0 0 16px; }
+.upload-examples { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+.upload-ex-pill { background: rgba(201,164,99,.1); border:1px solid rgba(201,164,99,.25); border-radius:var(--r-pill); padding:5px 13px; font-size:.74rem; color: var(--mut); font-family:'Jost',sans-serif; transition: background var(--dur-s) var(--ease); }
+.upload-zone:hover .upload-ex-pill{ background: rgba(201,164,99,.18); }
+
+.upload-preview { width:100%; min-height:180px; position:relative; }
+.preview-img { width:100%; height:180px; object-fit:contain; border-radius:13px; display:block; background:var(--cr); }
+.preview-overlay { position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(10,8,6,.88)); border-radius:0 0 13px 13px; padding:13px 16px 15px; }
+.preview-info { display:flex; align-items:center; justify-content:space-between; }
+.preview-filename { font-size:.76rem; color: rgba(246,232,196,.85); font-family:'Jost',sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70%; }
+.preview-remove-btn { background: rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.22); color: rgba(246,232,196,.85); border-radius:7px; padding:4px 11px; font-size:.73rem; cursor:pointer; font-family:'Jost',sans-serif; transition: background var(--dur-s) var(--ease), color var(--dur-s) var(--ease); }
+.preview-remove-btn:hover { background: rgba(255,90,90,.22); border-color: rgba(255,90,90,.35); color:#FFA8A8; }
+
+.preview-scanning { position:absolute; inset:0; border-radius:13px; overflow:hidden; pointer-events:none; }
+.scan-line { position:absolute; width:100%; height:2px; background: linear-gradient(90deg, transparent, var(--g), #fff, var(--g), transparent); box-shadow: 0 0 14px var(--g); animation: scanDown 1.8s var(--ease-soft) 3; }
+@keyframes scanDown{0%{top:0%;opacity:1;}100%{top:100%;opacity:.25;}}
+.scan-text { position:absolute; bottom:11px; right:15px; font-size:.7rem; color: var(--gl); font-family:'Jost',sans-serif; letter-spacing:.08em; text-transform:uppercase; animation: scanTextPulse 1s var(--ease-soft) infinite; }
+@keyframes scanTextPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* Occasion pills */
+.occasion-pills-row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.pills-label { font-size:.76rem; color: var(--mut); text-transform:uppercase; letter-spacing:.1em; font-family:'Jost',sans-serif; flex-shrink:0; }
+
+/* ── AI ANALYSIS PANEL ───────────────────────────────────────────────
+   Re-tuned as a frosted "result card" with a gold edge that feels
+   like it just resolved, instead of a flat box.                       */
+.ai-analysis-panel {
+  background: linear-gradient(165deg, rgba(201,164,99,.1), rgba(201,164,99,.035));
+  border: 1px solid rgba(201,164,99,.32);
+  border-radius: var(--r-m);
+  padding: 22px 26px;
+  margin: 22px 0;
+  box-shadow: var(--shadow-xs), 0 0 0 1px rgba(255,255,255,.4) inset;
+  animation: panelFadeIn var(--dur-m) var(--ease) forwards;
+}
+@keyframes panelFadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+.analysis-header { display:flex; align-items:center; gap:11px; margin-bottom:17px; }
+.analysis-icon-wrap { width:33px; height:33px; background: rgba(201,164,99,.16); border-radius:9px; display:flex; align-items:center; justify-content:center; color: var(--gd); flex-shrink:0; }
+.analysis-label { font-family:'Cormorant Garamond', Georgia, serif; font-size:.98rem; font-weight:600; color: var(--gd); letter-spacing:.05em; text-transform:uppercase; }
+
+.analysis-confidence-pill { margin-left:auto; display:flex; align-items:center; gap:7px; background: rgba(201,164,99,.13); border:1px solid rgba(201,164,99,.32); border-radius:var(--r-pill); padding:5px 13px; font-size:.76rem; color: var(--gd); font-family:'Jost',sans-serif; }
+.confidence-dot { width:7px; height:7px; border-radius:50%; background: var(--g); animation: pulse 1.4s var(--ease-soft) infinite; }
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.8);}}
+
+.extracted-tags-label, .colour-label { font-family:'Jost', sans-serif; font-size:.72rem; color: rgba(92,61,110,.65); text-transform:uppercase; letter-spacing:.09em; margin:0 0 10px; }
+.extracted-tags-section { margin-bottom:17px; }
+.colour-palette-section { margin-bottom:4px; }
+.extracted-tags-container { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:17px; }
+
+.ext-tag-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  background: rgba(201,164,99,.13); border:1px solid rgba(201,164,99,.42);
+  border-radius: var(--r-pill); padding:5px 13px; font-size:.78rem; color: var(--gd);
+  font-family:'Jost', sans-serif; cursor:default;
+  animation: tagPop .35s var(--ease) backwards;
+  transition: transform var(--dur-s) var(--ease);
+}
+.ext-tag-badge:hover{ transform: translateY(-1px); }
+.ext-tag-badge::before { content:"#"; color: var(--g); font-weight:700; font-size:.7rem; }
+.ext-tag-badge.high-confidence { background: rgba(201,164,99,.22); border-color: rgba(201,164,99,.7); color: var(--dp); font-weight:500; }
+@keyframes tagPop{from{opacity:0;transform:scale(.85);}to{opacity:1;transform:scale(1);}}
+
+.colour-palette-row { display:flex; align-items:center; gap:9px; margin-bottom:17px; }
+.colour-swatch { width:28px; height:28px; border-radius:50%; border:2px solid rgba(255,255,255,.6); box-shadow: var(--shadow-xs); cursor:default; transition: transform var(--dur-s) var(--ease); }
+.colour-swatch:hover { transform: scale(1.22) translateY(-2px); z-index:2; }
+.colour-swatch-label { font-size:.66rem; color: rgba(92,61,110,.6); margin-left:8px; font-family:'Jost', sans-serif; }
+
+.ai-summary-row { display:flex; align-items:flex-start; gap:9px; padding-top:13px; border-top:1px solid rgba(201,164,99,.18); color: var(--gd); }
+.ai-summary-text { font-family:'Jost', sans-serif; font-size:.84rem; color: var(--mut); line-height:1.6; margin:0; font-style:italic; }
+
+/* ── HOW IT WORKS ─────────────────────────────────────────────────────*/
+.steps{display:grid;grid-template-columns:repeat(3,1fr);}
+.step{padding:3.25rem 2.5rem 2.25rem;border-right:1px solid rgba(201,164,99,.18);text-align:center;display:flex;flex-direction:column;align-items:center;transition:transform var(--dur-m) var(--ease);}
+.step:hover{transform:translateY(-4px);}
+.step:last-child{border-right:none;}
+.sn{font-family:"Cormorant Garamond",serif;font-size:64px;font-weight:600;color:var(--g);opacity:.55;line-height:1;margin-bottom:14px;}
+.sr{width:54px;height:54px;border-radius:50%;border:1px solid var(--g);background:var(--dp);display:flex;align-items:center;justify-content:center;margin-bottom:1.3rem;font-size:21px;box-shadow:0 0 0 5px rgba(201,164,99,.07);transition:box-shadow var(--dur-m) var(--ease), transform var(--dur-m) var(--ease);}
+.step:hover .sr{box-shadow:0 0 0 8px rgba(201,164,99,.12);transform:scale(1.05);}
+.st{font-family:"Cormorant Garamond",serif;font-size:22px;color:#fff;margin-bottom:.8rem;font-weight:600;}
+.sb{font-size:14px;font-weight:400;color:rgba(255,255,255,.62);line-height:1.85;}
+
+/* ── SECTION TOP / FILTER BAR ────────────────────────────────────────*/
+.stop{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2.25rem;}
+.eyb{display:flex;align-items:center;gap:11px;font-size:11px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--gd);margin-bottom:.6rem;}
+.eyb::before{content:"";width:26px;height:1px;background:var(--g);display:block;}
+
+.fbar{display:flex;gap:9px;margin-bottom:2.75rem;flex-wrap:wrap;}
+.fp{font-family:"Jost",sans-serif;font-size:12px;font-weight:500;padding:8px 17px;border-radius:var(--r-pill);border:1px solid var(--bd);color:var(--mp);background:var(--wh);cursor:pointer;transition:all var(--dur-s) var(--ease);}
+.fp.on,.fp:hover{background:var(--g);border-color:var(--g);color:var(--dp);box-shadow:0 4px 14px -4px rgba(201,164,99,.5);transform:translateY(-1px);}
+
+/* ── ARTIST CARDS ─────────────────────────────────────────────────────
+   The card is the product: image zoom + lift on hover, a slightly
+   more confident shadow than a default Bootstrap-y "shadow-sm".       */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem;}
+.acard{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r-m);overflow:hidden;cursor:pointer;transition:border-color var(--dur-m) var(--ease), transform var(--dur-m) var(--ease), box-shadow var(--dur-m) var(--ease); display:flex; flex-direction:column; height:100%; box-shadow:var(--shadow-card);}
+.acard:hover{border-color:var(--g);transform:translateY(-5px);box-shadow:var(--shadow-card-hover);}
+.aph{height:200px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.aph img{transition:transform .7s var(--ease);}
+.acard:hover .aph img{transform:scale(1.07);}
+.ain{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:40px;color:rgba(255,255,255,.55);}
+.mbdg{position:absolute;top:12px;right:12px;background:var(--g);color:var(--dp);font-size:10px;font-weight:600;padding:4px 10px;border-radius:var(--r-pill);box-shadow:0 3px 10px -2px rgba(21,4,32,.3);}
+.gstr{height:1px;background:linear-gradient(90deg,transparent,var(--g),transparent);}
+.abdy{padding:1.3rem; flex:1; display:flex; flex-direction:column;}
+.anm{font-family:"Cormorant Garamond",serif;font-size:19.5px;font-weight:600;color:var(--rp);margin-bottom:3px;}
+.amet{font-size:12px;color:var(--gd);margin-bottom:11px;}
+.atgs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:13px;}
+.atg{font-size:11px;font-weight:500;padding:3px 11px;border-radius:var(--r-pill);background:var(--pp);color:var(--mp);}
+.aft{display:flex;align-items:center;justify-content:space-between;padding-top:11px;border-top:1px solid var(--bd);margin-bottom:11px;}
+.apr{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:16px;color:var(--gd);}
+.art{font-size:12px;color:var(--mp);}
+.aact{display:flex;gap:6px; margin-top:auto !important;}
+.ibtn{width:33px;height:33px;border-radius:var(--r-s);border:1px solid var(--bd);background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all var(--dur-s) var(--ease);text-decoration:none;}
+.ibtn:hover{border-color:var(--g);background:rgba(201,164,99,.08);transform:translateY(-1px);}
+.vbtn{flex:1;background:none;border:1px solid var(--g);color:var(--gd);font-family:"Jost",sans-serif;font-size:12px;font-weight:500;padding:8px;border-radius:var(--r-s);cursor:pointer;transition:all var(--dur-s) var(--ease);}
+.vbtn:hover{background:var(--g);color:var(--dp);box-shadow:var(--shadow-gold);}
+
+/* ── CATEGORIES ───────────────────────────────────────────────────────*/
+.cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.1rem;margin-top:3.25rem;}
+.ccard{height:182px;border-radius:var(--r-m);position:relative;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end;padding:1.35rem;transition:transform var(--dur-m) var(--ease), box-shadow var(--dur-m) var(--ease);box-shadow:var(--shadow-card);}
+.ccard:hover{transform:translateY(-4px) scale(1.01);box-shadow:var(--shadow-card-hover);}
+.cov{position:absolute;inset:0;transition:background var(--dur-m) var(--ease);}
+.ccard:hover .cov{background:rgba(0,0,0,.05) !important;}
+.ccon{position:relative;z-index:1;}
+.cnm{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:20.5px;font-weight:400;margin-bottom:3px;}
+.cds{font-size:11px;font-weight:300;line-height:1.55;}
+.cct{font-size:11px;font-weight:500;color:var(--g);margin-top:7px;letter-spacing:.04em;transition:transform var(--dur-s) var(--ease);}
+.ccard:hover .cct{transform:translateX(3px);}
+.cctd{color:var(--gd);}
+
+/* ── STATS BAND ───────────────────────────────────────────────────────*/
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);}
+.sit{text-align:center;padding:1.1rem;border-right:1px solid rgba(21,4,32,.18);}
+.sit:last-child{border-right:none;}
+.snum{font-family:"Cormorant Garamond",serif;font-size:48px;font-weight:600;color:var(--dp);line-height:1;margin-bottom:7px;}
+.slbl{font-size:11px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;color:rgba(21,4,32,.65);}
+
+/* ── REVIEWS ──────────────────────────────────────────────────────────*/
+.rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.6rem;margin-top:3.25rem;}
+.rcard{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r-m);padding:1.85rem;transition:transform var(--dur-m) var(--ease), box-shadow var(--dur-m) var(--ease);box-shadow:var(--shadow-card);}
+.rcard:hover{transform:translateY(-4px);box-shadow:var(--shadow-card-hover);}
+.rstr{color:var(--g);font-size:13px;margin-bottom:9px;letter-spacing:.05em;}
+.rq{font-family:"Cormorant Garamond",serif;font-size:64px;color:rgba(201,164,99,.16);line-height:.5;margin-bottom:1.1rem;}
+.rtx{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15.5px;color:var(--rp);line-height:1.85;margin-bottom:1.3rem;}
+.rau{display:flex;align-items:center;gap:10px;padding-top:1.1rem;border-top:1px solid var(--bd);}
+.rav{width:37px;height:37px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;box-shadow:var(--shadow-xs);}
+.rnm{font-size:13px;font-weight:500;color:var(--rp);}
+.roc{font-size:11px;color:var(--gd);}
+
+/* ── BANNER (FOR ARTISTS) ────────────────────────────────────────────*/
+.bnr{background:linear-gradient(135deg, var(--dp), #1F0830);padding:5.5rem;display:flex;align-items:center;justify-content:space-between;gap:3rem;}
+.bnl{max-width:560px;}
+.bnh{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:36px;color:#fff;margin-bottom:1.1rem;}
+.bnb{font-size:15px;font-weight:300;color:var(--sp);line-height:1.85;}
+.bnbt{display:flex;gap:1rem;margin-top:2.1rem;}
+
+/* ── FOOTER ───────────────────────────────────────────────────────────*/
+footer{background:#0C0116;padding:5.5rem 5.5rem 2.75rem;}
+.fgrid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:4rem;margin-bottom:3.25rem;}
+.ftg{font-size:11px;font-weight:500;letter-spacing:.16em;color:var(--g);text-transform:uppercase;margin-bottom:1.1rem;}
+.fds{font-size:13px;font-weight:300;color:var(--sp);line-height:1.85;}
+.fch{font-size:11px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;color:var(--g);margin-bottom:1.35rem;}
+.fls{list-style:none;display:flex;flex-direction:column;gap:.85rem;}
+.fls a{font-size:13px;font-weight:300;color:var(--sp);text-decoration:none;cursor:pointer;transition:color var(--dur-s) var(--ease), transform var(--dur-s) var(--ease);display:inline-block;}
+.fls a:hover{color:var(--g);transform:translateX(3px);}
+.fsoc{display:flex;gap:10px;margin-top:1.35rem;}
+.sc{width:39px;height:39px;border-radius:50%;border:1px solid rgba(201,164,99,.3);display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:all var(--dur-s) var(--ease);}
+.sc:hover{border-color:var(--g);background:rgba(201,164,99,.1);transform:translateY(-2px);}
+.fdiv{height:1px;background:rgba(201,164,99,.15);margin-bottom:2.1rem;}
+.fbot{display:flex;align-items:center;justify-content:space-between;}
+.fcp{font-size:12px;font-weight:300;color:var(--sp);}
+
+/* ── RESULTS PAGE ─────────────────────────────────────────────────────*/
+.rpage{padding-top:72px;}
+.rhero{background:linear-gradient(135deg, var(--dp), #1F0830);padding:3.25rem 5.5rem;display:flex;align-items:center;gap:2rem;}
+.rback{background:none;border:1px solid rgba(201,164,99,.32);color:var(--g);font-family:"Jost",sans-serif;font-size:13px;padding:9px 17px;border-radius:var(--r-s);cursor:pointer;transition:all var(--dur-s) var(--ease);flex-shrink:0;}
+.rback:hover{background:var(--g);color:var(--dp);transform:translateX(-2px);}
+.rthumb{width:58px;height:58px;border-radius:var(--r-s);object-fit:cover;border:1px solid rgba(201,164,99,.32);display:none;flex-shrink:0;box-shadow:var(--shadow-card);}
+.rh{font-family:"Cormorant Garamond",serif;font-size:28px;font-weight:400;color:#fff;margin-bottom:4px;}
+.rs{font-size:13px;font-weight:300;color:var(--sp);}
+.rbody{display:flex;gap:2.25rem;padding:3.25rem 5.5rem;}
+.fsbar{width:222px;flex-shrink:0;}
+.fgrp{margin-bottom:1.9rem;}
+.fgt{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--gd);margin-bottom:11px;}
+.fck{display:flex;align-items:center;gap:8px;margin-bottom:7px;cursor:pointer;font-size:13px;color:var(--mp);transition:color var(--dur-s) var(--ease);}
+.fck:hover{color:var(--gd);}
+.fck input{accent-color:var(--g);}
+.pr{width:100%;accent-color:var(--g);}
+.rgd{flex:1;}
+.scnt{font-size:13px;color:var(--mp);margin-bottom:1.1rem;font-weight:500;}
+.ssel{font-family:"Jost",sans-serif;font-size:12px;border:1px solid var(--bd);border-radius:var(--r-s);padding:7px 11px;background:var(--wh);color:var(--dp);outline:none;cursor:pointer;margin-bottom:1.6rem;transition:border-color var(--dur-s) var(--ease);}
+.ssel:hover{border-color:var(--g);}
+.nores{text-align:center;padding:4.5rem;color:var(--sp);grid-column:1/-1;}
+.nores h3{font-family:"Cormorant Garamond",serif;font-size:24px;color:var(--mp);margin-bottom:9px;}
+
+/* ── BROWSE ───────────────────────────────────────────────────────────*/
+.bhero{background:linear-gradient(135deg, var(--dp), #1F0830);padding:5.5rem 5.5rem 4.25rem;text-align:center;}
+.bh{font-family:"Cormorant Garamond",serif;font-size:clamp(36px,4.5vw,48px);font-weight:600;color:#fff;margin-bottom:1.1rem;}
+.bsub{font-size:15px;font-weight:300;color:var(--sp);max-width:500px;margin:0 auto 2.1rem;line-height:1.7;}
+.bsrch{display:flex;max-width:500px;margin:0 auto;}
+.bsi{flex:1;padding:14px 17px;font-family:"Jost",sans-serif;font-size:14px;border:1px solid rgba(201,164,99,.32);background:rgba(255,255,255,.08);color:#fff;border-radius:var(--r-s) 0 0 var(--r-s);outline:none;transition:background var(--dur-s) var(--ease), border-color var(--dur-s) var(--ease);}
+.bsi:focus{background:rgba(255,255,255,.13);border-color:var(--g);}
+.bsi::placeholder{color:var(--sp);}
+.bsb{background:var(--g);color:var(--dp);border:none;padding:14px 26px;font-family:"Jost",sans-serif;font-size:13px;font-weight:600;border-radius:0 var(--r-s) var(--r-s) 0;cursor:pointer;transition:background var(--dur-s) var(--ease);}
+.bsb:hover{background:#D9B86E;}
+
+/* ── PROFILE ──────────────────────────────────────────────────────────*/
+.ppage{padding-top:72px;}
+.phero{background:linear-gradient(135deg,var(--dp) 0%,var(--rp) 100%);padding:4.25rem 5.5rem;}
+.phi{display:flex;gap:2.6rem;align-items:flex-start;}
+.ppb{width:132px;height:132px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:44px;color:rgba(255,255,255,.6);border:3px solid rgba(201,164,99,.42);flex-shrink:0;box-shadow:0 12px 30px -8px rgba(0,0,0,.4);}
+.pinf{flex:1;}
+.pnm{font-family:"Cormorant Garamond",serif;font-size:34px;font-weight:600;color:#fff;margin-bottom:5px;display:flex;align-items:center;gap:13px;flex-wrap:wrap;}
+.vbdg{font-size:11px;font-weight:600;background:var(--g);color:var(--dp);padding:4px 11px;border-radius:var(--r-pill);}
+.pmt{font-size:13px;color:var(--sp);margin-bottom:11px;}
+.ptgs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.1rem;}
+.ptg{font-size:11px;font-weight:500;padding:4px 13px;border-radius:var(--r-pill);background:rgba(201,164,99,.16);color:var(--g);}
+.prt{font-size:14px;color:var(--sp);margin-bottom:1.1rem;}
+.psoc{display:flex;gap:8px;margin-bottom:1.6rem;}
+.psb{width:37px;height:37px;border-radius:var(--r-s);border:1px solid rgba(201,164,99,.32);background:none;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;transition:all var(--dur-s) var(--ease);text-decoration:none;}
+.psb:hover{border-color:var(--g);background:rgba(201,164,99,.12);transform:translateY(-2px);}
+.ctb{font-family:"Jost",sans-serif;font-size:13px;font-weight:600;background:var(--g);color:var(--dp);border:none;padding:13px 30px;border-radius:var(--r-s);cursor:pointer;transition:background var(--dur-s) var(--ease), transform var(--dur-s) var(--ease), box-shadow var(--dur-s) var(--ease);}
+.ctb:hover{background:#D9B86E;transform:translateY(-2px);box-shadow:var(--shadow-gold);}
+.pbdy{padding:3.25rem 5.5rem;}
+.pbio{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:17.5px;color:var(--mp);line-height:1.85;max-width:680px;margin-bottom:3.25rem;}
+.psh{font-family:"Cormorant Garamond",serif;font-size:30px;font-weight:400;color:var(--rp);margin-bottom:5px;}
+.pss{font-size:13px;color:var(--mut);margin-bottom:2.1rem;}
+.lgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.6rem;}
+.lcard{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r-m);overflow:hidden;transition:transform var(--dur-m) var(--ease), box-shadow var(--dur-m) var(--ease);box-shadow:var(--shadow-card);}
+.lcard:hover{transform:translateY(-5px);box-shadow:var(--shadow-card-hover);}
+.limg{height:250px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;}
+.limg img{transition:transform .7s var(--ease);}
+.lcard:hover .limg img{transform:scale(1.06);}
+.lcbdg{position:absolute;bottom:11px;left:11px;font-size:10px;font-weight:600;background:var(--g);color:var(--dp);padding:4px 10px;border-radius:var(--r-pill);box-shadow:0 3px 10px -2px rgba(21,4,32,.3);}
+.lbdy{padding:1.3rem;}
+.lnm{font-family:"Cormorant Garamond",serif;font-size:19.5px;font-weight:600;color:var(--rp);margin-bottom:4px;}
+.lpr{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:22px;color:var(--gd);margin-bottom:9px;}
+.lds{font-size:13px;color:var(--mut);line-height:1.75;margin-bottom:11px;}
+.lmt{font-size:12px;color:var(--sp);margin-bottom:4px;}
+.lad{font-size:12px;color:var(--gd);margin-bottom:13px;}
+.enqb{width:100%;background:var(--g);color:var(--dp);font-family:"Jost",sans-serif;font-size:13px;font-weight:600;border:none;padding:12px;border-radius:var(--r-s);cursor:pointer;transition:background var(--dur-s) var(--ease), transform var(--dur-s) var(--ease);}
+.enqb:hover{background:#D9B86E;transform:translateY(-1px);}
+
+/* ── MODALS ───────────────────────────────────────────────────────────
+   Frosted glass card, a touch of scale on entry rather than a plain
+   slide, so opening it feels considered.                              */
+.mov{position:fixed;inset:0;background:rgba(21,4,32,.78);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity var(--dur-m) var(--ease);backdrop-filter:blur(8px);}
+.mov.open{opacity:1;pointer-events:all;}
+.mdl{background:rgba(251,248,242,.97);border:1px solid rgba(201,164,99,.25);border-radius:var(--r-l);padding:2.6rem;width:90%;max-width:460px;position:relative;transform:translateY(18px) scale(.97);transition:transform var(--dur-m) var(--ease);box-shadow:var(--shadow-modal);}
+.mov.open .mdl{transform:translateY(0) scale(1);}
+.mx{position:absolute;top:1.1rem;right:1.1rem;background:none;border:none;font-size:20px;cursor:pointer;color:var(--mp);transition:color var(--dur-s) var(--ease), transform var(--dur-s) var(--ease);}
+.mx:hover{color:var(--gd);transform:rotate(90deg);}
+.mh{font-family:"Cormorant Garamond",serif;font-size:28px;font-weight:600;color:var(--rp);margin-bottom:5px;}
+.ms{font-size:13px;color:var(--mut);margin-bottom:1.6rem;}
+.mtbs{display:flex;background:var(--cr);border-radius:var(--r-s);padding:4px;gap:3px;margin-bottom:1.6rem;}
+.mtb{flex:1;padding:9px;border-radius:6px;border:none;font-family:"Jost",sans-serif;font-size:13px;cursor:pointer;background:none;color:var(--mut);transition:all var(--dur-s) var(--ease);}
+.mtb.on{background:var(--wh);color:var(--rp);font-weight:500;border:1px solid var(--bd);box-shadow:var(--shadow-xs);}
+.tc{display:none;}
+.tc.on{display:block; animation: fadeUp .35s var(--ease);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.fld{margin-bottom:1.05rem;}
+.fll{font-size:11px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--gd);margin-bottom:6px;display:block;}
+.fli{width:100%;background:var(--wh);border:1px solid var(--bd);border-radius:var(--r-s);padding:11px 13px;font-family:"Jost",sans-serif;font-size:13px;color:var(--dp);outline:none;transition:border-color var(--dur-s) var(--ease), box-shadow var(--dur-s) var(--ease);}
+.fli:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(201,164,99,.14);}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:1.6rem;}
+.ro{padding:15px;border-radius:var(--r-s);border:1px solid var(--bd);background:var(--wh);cursor:pointer;text-align:center;transition:all var(--dur-s) var(--ease);}
+.ro:hover{border-color:rgba(201,164,99,.5);}
+.ro.on{border-color:var(--g);background:var(--gl);box-shadow:0 4px 14px -4px rgba(201,164,99,.4);}
+.re{font-size:24px;display:block;margin-bottom:7px;}
+.rl{font-size:13px;font-weight:500;color:var(--rp);}
+
+/* ── ADMIN MODAL ──────────────────────────────────────────────────────*/
+#ADMIN-DASH .mdl { max-width: 800px; padding: 3.25rem; background: rgba(251,248,242,.98); }
+.adm-stat { padding: 1.6rem; border: 1px solid var(--bd); border-radius: var(--r-m); background: var(--wh); text-align: center; box-shadow:var(--shadow-card); transition: transform var(--dur-m) var(--ease); }
+.adm-stat:hover{ transform: translateY(-3px); }
+.adm-stat-lbl { font-size: 11px; color: var(--gd); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 9px; font-weight: 500; }
+.adm-stat-val { font-size: 42px; font-family: "Cormorant Garamond", serif; color: var(--dp); font-weight: 600; line-height: 1; }
+
+/* ── TOAST ────────────────────────────────────────────────────────────*/
+.toast{position:fixed;bottom:2rem;right:2rem;background:var(--rp);color:#fff;font-family:"Jost",sans-serif;font-size:13px;padding:15px 21px;border-radius:var(--r-m);border-left:4px solid var(--g);z-index:999;transform:translateY(40px) scale(.95);opacity:0;transition:all var(--dur-m) var(--ease);max-width:320px;pointer-events:none;box-shadow:var(--shadow-modal);}
+.toast.show{transform:translateY(0) scale(1);opacity:1;}
+
+/* ── MOTION SENSITIVITY ───────────────────────────────────────────────*/
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
+}
+
+/* --- THE MASTER MOBILE FIX (CLAUDE + KIMI) --- */
+@media (max-width: 900px) {
+  /* 1. Global Reset (No dangerous vw units) */
+  html, body {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: relative;
+  }
+
+  * {
+    box-sizing: border-box !important;
+    min-width: 0; /* Flex blowout fix */
+  }
+
+  /* 2. Grid & Flex Collapse */
+  .hero, .steps, .grid3, .cgrid, .rgrid, .lgrid, .sgrid, .fgrid, .rbody, .phi {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 1.5rem !important;
+  }
+
+  /* 3. Padding Resets (Kimi's Catch) */
+  .sec, footer, .bnr, .phero, .pbdy, .rhero, .bhero, .rbody,
+  .hl, .hr,
+  #page-cat > div > div[style] {
+    padding: 2.5rem 1.5rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 4. Search Module Fix (Claude's Catch) */
+  .canvas-search-module {
+    padding: 1.5rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    align-self: stretch !important;
+  }
+  #demo > div { padding: 0 !important; width: 100% !important; overflow: hidden !important; }
+  .search-row { flex-direction: column !important; }
+  .canvas-query-input, .canvas-search-btn, .search-input-wrap { width: 100% !important; }
+
+  /* 5. Filter Sidebar Fix (Kimi's Catch) */
+  .fsbar { width: 100% !important; flex-shrink: 1 !important; margin-bottom: 1.5rem !important; }
+
+  /* 6. Typography & UI Alignments */
+  h1 { font-size: 38px !important; line-height: 1.1 !important; word-wrap: break-word; }
+  h2 { font-size: 28px !important; line-height: 1.2 !important; word-wrap: break-word; }
+  .hr img { width: 100% !important; max-width: 320px !important; margin: 0 auto; display: block; }
+  .hcta, .proof, .avs, .bnbt, .fsoc, .ptgs, .psoc, .occasion-pills-row { justify-content: center !important; text-align: center !important; }
+  .proof { flex-direction: column !important; }
+
+  /* 7. Navbar */
+  nav { padding: 0 1.5rem !important; width: 100% !important; }
+  .nlinks { display: none !important; }
+
+  /* 8. Component borders & alignments */
+  .step { border-right: none !important; border-bottom: 1px solid rgba(201,164,99,.18) !important; padding: 2rem 0 !important; }
+  .step:last-child { border-bottom: none !important; }
+  .sit { border-right: none !important; border-bottom: 1px solid rgba(21,4,32,.18) !important; padding: 1.5rem 0 !important; }
+  .sit:last-child { border-bottom: none !important; }
+  .fgrid { text-align: center; }
+
+  /* Ensure modals stay contained */
+  .mdl { max-width: 90% !important; padding: 2rem 1.5rem !important; margin: 0 auto; }
+}
+
+@media (max-width: 600px) {
+  h1 { font-size: 32px !important; }
+  h2 { font-size: 26px !important; }
+  .ppb { width: 100px !important; height: 100px !important; font-size: 32px !important; }
+}
+
+/* 🚀 CANVAS HERO ENTRY ANIMATIONS */
+.hl .ey { animation: slideUpPop 0.8s var(--ease) forwards; opacity: 0; transform: translateY(20px); }
+.hl h1 { animation: slideUpPop 0.8s var(--ease) 0.1s forwards; opacity: 0; transform: translateY(20px); }
+.hl .hb { animation: slideUpPop 0.8s var(--ease) 0.2s forwards; opacity: 0; transform: translateY(20px); }
+.hl .hcta { animation: slideUpPop 0.8s var(--ease) 0.3s forwards; opacity: 0; transform: translateY(20px); }
+.hl .proof { animation: slideUpPop 0.8s var(--ease) 0.4s forwards; opacity: 0; transform: translateY(20px); }
+
+.hr img { 
+  animation: imagePop 1s cubic-bezier(0.16, 1, 0.3, 1) forwards, heroFloat 6s ease-in-out 1s infinite !important; 
+  opacity: 0; 
+  transform: scale(0.95) translateY(30px); 
+}
+
+@keyframes slideUpPop {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes imagePop {
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+</style>
+</head>
+<body>
+
+<nav id="NAV">
+  <div class="nlogo" onclick="GO('home')" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+    <div style="background: #FFFFFF; border-radius: 10px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); padding: 4px;">
+      <img src="canvas-white.png" alt="Canvas Logo" style="width: 100%; height: 100%; object-fit: contain;">
+    </div>
+    <span style="font-family:'Cormorant Garamond',serif; font-size:24px; font-weight:600; color:var(--rp);">Canvas | Delhi</span>
+  </div>
+  <div class="nlinks">
+    <a onclick="GO('home')">Home</a>
+    <a onclick="GO('browse')">Browse artists</a>
+    <a onclick="GO('home');setTimeout(()=>ID('styles').scrollIntoView({behavior:'smooth'}),120)">Styles</a>
+    <a onclick="GO('home');setTimeout(()=>ID('forartists').scrollIntoView({behavior:'smooth'}),120)">For artists</a>
+  </div>
+  <div class="nacts">
+    <button class="bgs" onclick="openM('login')">Log in</button>
+    <button class="bg" onclick="openM('signup')">Join Canvas</button>
+  </div>
+</nav>
+
+<div class="page active" id="page-home">
+<section class="hero">
+  <div class="hl">
+    <div class="ey">AI-powered beauty matching</div>
+    <h1>Delhi's Premium<br><em>Beauty Match</em></h1>
+    <p class="hb">Upload the look that inspires you - a screenshot, a saved post, anything - and our AI reads the style, mood, and technique to find artists whose work genuinely matches.</p>
+    <p class="hb">The exclusive AI-powered bridal and beauty booking platform for Delhi NCR.</p>
+    <div class="hcta">
+      <button class="bgl" onclick="ID('demo').scrollIntoView({behavior:'smooth'})">Try the Live Demo →</button>
+      <button class="bol" onclick="ID('howitworks').scrollIntoView({behavior:'smooth'})">How it works</button>
+    </div>
+    <div class="proof">
+      <div class="avs">
+        <div class="av" style="background:#EDE0F5;color:#6B2D8B;">PK</div>
+        <div class="av" style="background:#2D0A3E;color:#C4A8D4;">TU</div>
+        <div class="av" style="background:#F7E7B3;color:#8B6914;">GA</div>
+        <div class="av" style="background:#6B2D8B;color:#EDE0F5;">ER</div>
+      </div>
+      <p class="pt"><strong>Verified premium artists</strong> across Delhi NCR</p>
+    </div>
+  </div>
+  
+  <div class="hr">
+    <div style="text-align: center;">
+      <img src="canvas-purple.png" alt="Canvas Logo" style="width: 400px; height: 400px; object-fit: cover; max-width: 100%; border-radius: 32px; box-shadow: 0 30px 60px rgba(26,5,38,.15); margin-bottom: 2rem;">
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="demo" style="background: var(--cr); border-top: 1px solid var(--bd);">
+  <div class="shd" style="margin-bottom: 2rem;">
+    <div class="slb">Live Prototype</div>
+    <h2 class="hd">The Deterministic Matching Engine</h2>
+    <p style="font-size: 15px; color: #5A3A6B; max-width: 600px; margin: 1rem auto 0; line-height: 1.6;">Test the AI routing logic. Input client parameters below to instantly route to verified artists based on hyper-local data and specialization.</p>
+  </div>
+  
+  <div style="display: flex; justify-content: center; flex-direction: column; align-items: center;">
+    
+    <div class="canvas-search-module">
+      <div class="search-row">
+        <div class="search-input-wrap">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input
+            type="text"
+            id="canvas-query-input"
+            class="canvas-query-input"
+            placeholder="Describe your look… e.g. 'South Indian Bridal in Chennai'"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Describe your desired look"
+          />
+          <button
+            class="search-clear-btn"
+            id="search-clear-btn"
+            onclick="clearSearch()"
+            aria-label="Clear search"
+            style="display:none;">✕</button>
+        </div>
+        <button class="canvas-search-btn" onclick="handleSearch()" id="search-submit-btn">
+          <span>Find My Artist</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="search-divider" role="separator">
+        <span class="divider-line"></span>
+        <span class="divider-text">or upload inspiration</span>
+        <span class="divider-line"></span>
+      </div>
+
+      <div
+        class="upload-zone"
+        id="canvas-upload-zone"
+        onclick="document.getElementById('canvas-file-input').click()"
+        ondragover="handleDragOver(event)"
+        ondragleave="handleDragLeave(event)"
+        ondrop="handleDrop(event)"
+        role="button"
+        tabindex="0"
+        aria-label="Upload inspiration image - click or drag and drop"
+        onkeydown="if(event.key==='Enter'||event.key===' ')document.getElementById('canvas-file-input').click()"
+      >
+        <div class="upload-placeholder" id="upload-placeholder">
+          <div class="upload-icon-ring" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p class="upload-headline">Upload a Pinterest screenshot or Instagram save</p>
+          <p class="upload-subtext">JPG, PNG, WEBP · Max 10MB · Or drag & drop</p>
+          <div class="upload-examples" aria-hidden="true">
+            <span class="upload-ex-pill">Pinterest board</span>
+            <span class="upload-ex-pill">Instagram screenshot</span>
+            <span class="upload-ex-pill">Mood board</span>
+            <span class="upload-ex-pill">Magazine cutout</span>
+          </div>
+        </div>
+
+        <div class="upload-preview" id="upload-preview" style="display:none;">
+          <img id="upload-preview-img" src="" alt="Your uploaded inspiration image" class="preview-img"/>
+          <div class="preview-overlay">
+            <div class="preview-info">
+              <span id="preview-filename" class="preview-filename"></span>
+              <button
+                class="preview-remove-btn"
+                onclick="removeUploadedImage(event)"
+                aria-label="Remove uploaded image">Remove</button>
+            </div>
+            <div class="preview-scanning" id="preview-scanning" aria-hidden="true">
+              <div class="scan-line"></div>
+              <span class="scan-text">CANVAS Vision scanning…</span>
+            </div>
+          </div>
+        </div>
+
+        <input
+          type="file"
+          id="canvas-file-input"
+          accept="image/jpeg,image/jpg,image/png,image/webp"
+          style="display:none;"
+          onchange="handleFileSelected(event)"
+          aria-hidden="true"
+        />
+      </div>
+
+      <div id="canvas-ai-analysis-panel"
+           class="ai-analysis-panel"
+           style="display:none;"
+           aria-live="polite"
+           role="region"
+           aria-label="AI aesthetic analysis results">
+
+        <div class="analysis-header">
+          <div class="analysis-icon-wrap" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.8">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+              <path d="M11 8v6M8 11h6" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <span class="analysis-label">CANVAS Vision Analysis</span>
+          <div class="analysis-confidence-pill">
+            <span class="confidence-dot" aria-hidden="true"></span>
+            <span id="analysis-confidence-text">Analysing...</span>
+          </div>
+        </div>
+
+        <div class="extracted-tags-section">
+          <p class="extracted-tags-label">Aesthetic tags extracted from your inspiration</p>
+          <div id="extracted-tags-container" class="extracted-tags-container" role="list"></div>
+        </div>
+
+        <div class="colour-palette-section">
+          <p class="colour-label">Detected tone palette</p>
+          <div id="colour-palette-container" class="colour-palette-row"></div>
+        </div>
+
+        <div class="ai-summary-row" aria-live="polite">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8v4l3 3"/>
+          </svg>
+          <p id="ai-summary-text" class="ai-summary-text"></p>
+        </div>
+      </div>
+
+      <div class="occasion-pills-row" id="occasion-pills-row">
+        <span class="pills-label" id="pills-label">Occasion:</span>
+        <div class="pls" style="margin-bottom:0; display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="fp on" onclick="tpl(this)">Wedding</button>
+          <button class="fp" onclick="tpl(this)">Shoot</button>
+          <button class="fp" onclick="tpl(this)">Party</button>
+          <button class="fp" onclick="tpl(this)">Editorial</button>
+          <button class="fp" onclick="tpl(this)">Everyday</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="sec dark" id="howitworks">
+  <div class="shd">
+    <div class="slb">The Canvas way</div>
+    <h2 class="hw">Stop guessing. Start matching.</h2>
+  </div>
+  
+  <div class="steps">
+    <div class="step">
+      <div class="sn">1</div>
+      <div class="sr">📸</div>
+      <div class="st">Upload your vision</div>
+      <div class="sb">Drop a screenshot or photo of the exact makeup look you want.</div>
+    </div>
+    
+    <div class="step">
+      <div class="sn">2</div>
+      <div class="sr">✨</div>
+      <div class="st">AI matches the style</div>
+      <div class="sb">Our engine analyzes the techniques and finds artists who specialize in it.</div>
+    </div>
+    
+    <div class="step">
+      <div class="sn">3</div>
+      <div class="sr">💬</div>
+      <div class="st">Book with confidence</div>
+      <div class="sb">Compare portfolios, pricing, and message your chosen artist directly.</div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="trending">
+  <div class="stop">
+    <div>
+      <div class="eyb">Featured artists</div>
+      <h2 class="hd">Trending this week</h2>
+    </div>
+    <button class="bgo" onclick="GO('browse')">View all artists →</button>
+  </div>
+  <div class="grid3" id="home-grid"></div>
+</section>
+
+<section class="sec cream" id="styles">
+  <div class="shd">
+    <div class="slb slbd">Browse by style</div>
+    <h2 class="hd">What kind of look are you going for?</h2>
+  </div>
+  <div class="cgrid" id="cat-grid"></div>
+</section>
+
+<section class="sec gold-bg">
+  <div class="sgrid">
+    <div class="sit"><div class="snum">5</div><div class="slbl">Verified artists</div></div>
+    <div class="sit"><div class="snum">₹21,700</div><div class="slbl">Avg Booking Value</div></div>
+    <div class="sit"><div class="snum">88%</div><div class="slbl">Trial-to-Booking Rate</div></div>
+    <div class="sit"><div class="snum">4.8★</div><div class="slbl">Platform Avg Rating</div></div>
+  </div>
+</section>
+
+<section class="sec cream">
+  <div class="shd">
+    <div class="slb slbd">Love from our users</div>
+    <h2 class="hd">What people are saying</h2>
+  </div>
+  <div class="rgrid">
+    <div class="rcard"><div class="rstr">★★★★★</div><div class="rq">"</div><p class="rtx">I uploaded a picture from Pinterest and Canvas found me an artist who had done almost the exact same look. Honestly shocked at how accurate the match was.</p><div class="rau"><div class="rav" style="background:#EDE0F5;color:#6B2D8B;">SR</div><div><p class="rnm">Sneha R.</p><p class="roc">Bridal · Mumbai</p></div></div></div>
+    <div class="rcard"><div class="rstr">★★★★★</div><div class="rq">"</div><p class="rtx">As a model, finding artists who understand editorial work is hard. Canvas filtered out the noise immediately. The match score is genuinely useful.</p><div class="rau"><div class="rav" style="background:#2D0A3E;color:#C4A8D4;">KM</div><div><p class="rnm">Kavya M.</p><p class="roc">Editorial · Delhi</p></div></div></div>
+    <div class="rcard"><div class="rstr">★★★★★</div><div class="rq">"</div><p class="rtx">Described the look in two lines, got artists who could do it sorted by price. Booked in ten minutes. This is exactly how it should work.</p><div class="rau"><div class="rav" style="background:#F7E7B3;color:#8B6914;">TP</div><div><p class="rnm">Tara P.</p><p class="roc">Glam · Bengaluru</p></div></div></div>
+  </div>
+</section>
+
+<section class="bnr" id="forartists">
+  <div class="bnl">
+    <div class="slb" style="justify-content:flex-start;">For makeup artists</div>
+    <p class="bnh">Are you a makeup artist?</p>
+    <p class="bnb">It is completely free to list your verified portfolio on CANVAS. When our AI matches you with a bride, you will receive a blurred notification. To unlock the client's WhatsApp number and inspiration photo (a high-intent lead), you simply pay a micro-fee of ₹99. You can also upgrade to CANVAS Pro for a flat monthly subscription to unlock unlimited leads and priority placement in our AI search results.</p>
+    <div class="bnbt">
+      <button class="bgo">Learn about Freemium</button>
+      <button class="bg" onclick="openM('signup'); setTimeout(() => document.getElementById('ra').click(), 50);">Apply to join Canvas</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="fgrid">
+    <div>
+      <p class="ftg">Beauty, Matched.</p>
+      <p class="fds">An AI-powered marketplace connecting clients to makeup artists who genuinely match their style. Browse, filter, and contact directly - no booking fees.</p>
+      <div class="fsoc"><div class="sc">📸</div><div class="sc">▶️</div><div class="sc">💬</div></div>
+    </div>
+    <div>
+      <p class="fch">Platform</p>
+      <ul class="fls">
+        <li><a onclick="GO('home')">Home</a></li>
+        <li><a onclick="GO('browse')">Browse artists</a></li>
+        <li><a onclick="GO('home');setTimeout(()=>ID('styles').scrollIntoView({behavior:'smooth'}),120)">Browse by style</a></li>
+        <li><a onclick="GO('home');setTimeout(()=>ID('forartists').scrollIntoView({behavior:'smooth'}),120)">For artists</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="fch">Company</p>
+      <ul class="fls">
+        <li><a>About Canvas</a></li>
+        <li><a>Privacy policy</a></li>
+        <li><a>Terms of service</a></li>
+        <li><a>Contact us</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="fdiv"></div>
+  <div class="fbot"><p class="fcp">© 2026 Canvas. All rights reserved.</p><p class="fcp">Made with love for beauty <span style="cursor:pointer;" onclick="ID('ADMIN-DASH').classList.add('open')">✦</span></p></div>
+</footer>
+</div>
+
+<div class="page" id="page-results">
+<div class="rpage">
+  <div class="rhero">
+    <button class="rback" onclick="GO('home')">← Back</button>
+    <img id="rthumb" class="rthumb" alt="">
+    <div>
+      <p class="rh" id="rhead">Artists matched to your look</p>
+      <p class="rs" id="rsub">Ranked by how closely their portfolio matches your reference</p>
+    </div>
+  </div>
+  <div class="rbody">
+    <div class="fsbar">
+      <div class="fgrp">
+        <p class="fgt">Sort by</p>
+        <select class="ssel" style="width:100%" onchange="sortR(this.value)">
+          <option value="match">Best match</option>
+          <option value="rating">Highest rated</option>
+          <option value="plo">Price: low to high</option>
+          <option value="phi">Price: high to low</option>
+        </select>
+      </div>
+      <div class="fgrp">
+        <p class="fgt">Max budget</p>
+        <input type="range" class="pr" id="budslider" min="2500" max="55000" value="55000" step="500" oninput="updBudget(this.value)">
+        <p style="font-size:12px;color:var(--mp);margin-top:6px;" id="budlbl">Up to ₹55,000</p>
+      </div>
+      <div class="fgrp">
+        <p class="fgt">City</p>
+        <label class="fck"><input type="checkbox" value="Mumbai" onchange="applyF()"> Mumbai</label>
+        <label class="fck"><input type="checkbox" value="Delhi" onchange="applyF()"> Delhi/NCR</label>
+        <label class="fck"><input type="checkbox" value="Bengaluru" onchange="applyF()"> Bengaluru</label>
+        <label class="fck"><input type="checkbox" value="Pune" onchange="applyF()"> Pune</label>
+        <label class="fck"><input type="checkbox" value="Chennai" onchange="applyF()"> Chennai</label>
+      </div>
+    </div>
+    <div class="rgd">
+      <p class="scnt" id="rcnt"></p>
+      <div class="grid3" id="res-grid"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="page" id="page-browse">
+<div class="bhero">
+  <div class="slb" style="color:var(--g);">All artists</div>
+  <h1 class="bh">Browse Canvas artists</h1>
+  <p class="bsub">Every verified makeup artist on Canvas, all in one place.</p>
+  <div class="bsrch">
+    <input class="bsi" id="bsrch" placeholder="Search by name, city, or look type..." oninput="renderBrowse()">
+    <button class="bsb" onclick="renderBrowse()">Search</button>
+  </div>
+</div>
+<div class="sec" style="padding-top:3rem;">
+  <div class="fbar" id="bfbar"></div>
+  <div class="grid3" id="browse-grid"></div>
+</div>
+</div>
+
+<div class="page" id="page-cat">
+<div class="rpage">
+  <div class="rhero">
+    <button class="rback" onclick="GO('home')">← Back to home</button>
+    <div>
+      <p class="rh" id="cat-head">Category artists</p>
+      <p class="rs" id="cat-sub">Browse artists specialising in this look</p>
+    </div>
+  </div>
+  <div style="padding:3rem 5rem;">
+    <div class="grid3" id="cat-grid-res"></div>
+  </div>
+</div>
+</div>
+
+<div class="page" id="page-profile">
+<div class="ppage" id="profile-inner"></div>
+</div>
+
+<div class="mov" id="MODAL" onclick="closeMO(event)">
+  <div class="mdl">
+    <button class="mx" onclick="closeM()">✕</button>
+    <div class="mtbs">
+      <button class="mtb on" id="mtb-login" onclick="swM('login')">Log in</button>
+      <button class="mtb" id="mtb-signup" onclick="swM('signup')">Sign up</button>
+    </div>
+    
+    <div class="tc on" id="mc-login">
+      <p class="mh">Welcome back</p>
+      <p class="ms">Log in to your Canvas account</p>
+      
+      <button class="bgo" style="width:100%; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:1rem; padding:12px; border-color:var(--bd);" onclick="doGoogleAuth()">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        <span style="color:var(--dp); font-weight:500;">Continue with Google</span>
+      </button>
+      
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:1rem;">
+        <div style="flex:1; height:1px; background:var(--bd);"></div>
+        <span style="font-size:11px; color:var(--gd); text-transform:uppercase;">or</span>
+        <div style="flex:1; height:1px; background:var(--bd);"></div>
+      </div>
+
+      <div class="fld"><label class="fll">Email</label><input id="log-email" class="fli" type="email" placeholder="your@email.com"></div>
+      <div class="fld"><label class="fll">Password</label><input id="log-pass" class="fli" type="password" placeholder="••••••••"></div>
+      <button class="bg" style="width:100%;padding:13px;border-radius:6px;font-size:14px;margin-top:.5rem;" onclick="doLogin()">Log in with Email</button>
+    </div>
+    
+    <div class="tc" id="mc-signup">
+      <p class="mh">Join Canvas</p>
+      <p class="ms">Are you a client or a makeup artist?</p>
+      <div class="rg">
+        <div class="ro on" id="rc" onclick="selR('c')"><span class="re">💄</span><span class="rl">I'm a client</span></div>
+        <div class="ro" id="ra" onclick="selR('a')"><span class="re">🎨</span><span class="rl">I'm an artist</span></div>
+      </div>
+      
+      <button class="bgo" style="width:100%; display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:1rem; padding:12px; border-color:var(--bd);" onclick="doGoogleAuth()">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        <span style="color:var(--dp); font-weight:500;">Sign up with Google</span>
+      </button>
+
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:1rem;">
+        <div style="flex:1; height:1px; background:var(--bd);"></div>
+        <span style="font-size:11px; color:var(--gd); text-transform:uppercase;">or</span>
+        <div style="flex:1; height:1px; background:var(--bd);"></div>
+      </div>
+
+      <div class="fld"><label class="fll">Full name</label><input id="sig-name" class="fli" type="text" placeholder="Your name"></div>
+      <div class="fld"><label class="fll">Email</label><input id="sig-email" class="fli" type="email" placeholder="your@email.com"></div>
+      <div class="fld"><label class="fll">Password</label><input id="sig-pass" class="fli" type="password" placeholder="Create a password"></div>
+      <button class="bg" style="width:100%;padding:13px;border-radius:6px;font-size:14px;margin-top:.5rem;" onclick="doSignup()">Create with Email</button>
+    </div>
+  </div>
+</div>
+
+<div class="mov" id="ADMIN-DASH" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="mdl" style="max-width:800px; padding:3rem;">
+    <button class="mx" onclick="ID('ADMIN-DASH').classList.remove('open')">✕</button>
+    <h2 style="font-family:'Cormorant Garamond',serif; margin-bottom: 2rem; color:var(--rp);">Platform Operator Intelligence - CANVAS</h2>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1.5rem; margin-bottom:2rem;">
+      <div class="adm-stat">
+        <p class="adm-stat-lbl">Total GMV</p>
+        <p class="adm-stat-val">₹6,51,000</p>
+      </div>
+      <div class="adm-stat">
+        <p class="adm-stat-lbl">Booking Conversion</p>
+        <p class="adm-stat-val">88%</p>
+      </div>
+      <div class="adm-stat">
+        <p class="adm-stat-lbl">Platform Revenue (12%)</p>
+        <p class="adm-stat-val">₹78,120</p>
+      </div>
+    </div>
+    <div style="padding:1.5rem; border:1px solid var(--bd); border-radius:12px; background:var(--wh);">
+      <p style="font-size:12px; color:var(--gd); text-transform:uppercase; letter-spacing:1px; margin-bottom:1rem;">Traffic Sources</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <span style="background:var(--pp); color:var(--mp); padding:6px 14px; border-radius:20px; font-size:13px;">Pinterest (38%)</span>
+        <span style="background:var(--pp); color:var(--mp); padding:6px 14px; border-radius:20px; font-size:13px;">Direct Search (27%)</span>
+        <span style="background:var(--pp); color:var(--mp); padding:6px 14px; border-radius:20px; font-size:13px;">Instagram (19%)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="TOAST"></div>
+
+<script>
+// ─── HELPERS ───
+const ID = id => document.getElementById(id);
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+let TT;
+function toast(m){const t=ID('TOAST');t.textContent=m;t.classList.add('show');clearTimeout(TT);TT=setTimeout(()=>t.classList.remove('show'),3500);}
+
+// ─── PAGES ───
+let CUR='home';
+function GO(p){
+  $$('.page').forEach(x=>x.classList.remove('active'));
+  ID('page-'+p).classList.add('active');
+  window.scrollTo(0,0);
+  CUR=p;
+  const nav=ID('NAV');
+  nav.className=p==='home'?'':'solid';
+  if(p==='browse')renderBrowse();
+}
+
+window.addEventListener('scroll',()=>{
+  if(CUR==='home')ID('NAV').className=window.scrollY>50?'solid':'';
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CANVAS ARTISTS DATABASE v3.0
+// ═══════════════════════════════════════════════════════════════════════════
+const ARTISTS_DB = [
+  {
+    "id": "artist_001",
+    "name": "Prachi Kaushal",
+    "business_name": "Kaushal Makeovers",
+    "profile_image": "Kaushal Makeover/prachi_profile.jpg",
+    "city": "South Extension, Delhi",
+    "city_aliases": [
+      "delhi", "south ex", "south extension", "south delhi", "new delhi",
+      "ncr", "def col", "lajpat", "greater kailash", "gk"
+    ],
+    "rate": 35000,
+    "rate_display": "₹35,000",
+    "rate_note": "Premium Bridal Package · Trial session included",
+    "base_match_score": 96,
+    "match": 0,
+    "tags": [
+      "South Indian Bridal",
+      "North Indian Royal Festive",
+      "HD Airbrush Bridal",
+      "Reception Glam",
+      "Engagement",
+      "Warm Glam",
+      "Traditional",
+      "Heavy Jewelry Match",
+      "Christian Minimalist Bridal",
+      "Soft Glam",
+      "Party Makeup",
+      "Bold Smokey Eye",
+      "High Fashion"
+    ],
+    "matched_portfolio_work": [
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781828257/1.._kwsi9l.jpg",
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781828257/2.._ceapkd.jpg",
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781828257/3.._gxa2pq.jpg",
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781828257/4.._mgdq9r.jpg",
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781828258/5.._wynoeb.jpg"
+    ],
+    "portfolio_alt_texts": [
+      "Prachi Kaushal - Intense Smokey Eye Bold Glam",
+      "Prachi Kaushal - Silver Cut-Crease Reception Glam",
+      "Prachi Kaushal - Soft Glam Engagement Look",
+      "Prachi Kaushal - Christian Bridal with Smoky Elegance",
+      "Prachi Kaushal - North Indian Royal Festive Bridal"
+    ],
+    "bio": "Prachi Kaushal is Delhi's most sought-after premium bridal makeup artist with over 8 years of experience. Specialising in HD Airbrush technique and traditional bridal aesthetics, every look is crafted to photograph beautifully under intense wedding lights, hold through the entire ceremony, and feel like the best version of the bride herself.",
+    "experience_years": 8,
+    "rating": 4.9,
+    "review_count": 214,
+    "instagram_handle": "@kaushal_makeovers",
+    "instagram_url": "https://www.instagram.com/kaushal_makeovers",
+    "whatsapp_number": "918920219373",
+    "whatsapp_display": "+91-89202-19373",
+    "initials": "PK",
+    "gradient_bg": "linear-gradient(135deg, #8B6914 0%, #C9A84C 100%)",
+    "badge": "Flagship Artist",
+    "badge_color": "#C9A84C",
+    "response_time": "Usually replies within 2 hours",
+    "bookings_this_month": 6,
+    "conversion_rate": 92,
+    "monthly_revenue": 210000,
+    "availability_status": "Available",
+    "next_available": "June 16, 2026",
+    "travel_available": true,
+    "languages": ["Hindi", "English"]
+  },
+  {
+    "id": "artist_002",
+    "name": "Tusya",
+    "business_name": "Facestory by Tusya",
+    "city": "New Delhi",
+    "city_aliases": [
+      "delhi", "new delhi", "ncr", "gurgaon", "gurugram",
+      "noida", "faridabad", "ghaziabad", "dwarka", "south delhi",
+      "hauz khas", "cp", "connaught"
+    ],
+    "rate": 22000,
+    "rate_display": "₹22,000",
+    "rate_note": "Bridal Package · Trial session included",
+    "base_match_score": 94,
+    "match": 0,
+    "tags": [
+      "Bollywood Celebrity Glam",
+      "Editorial Runway",
+      "High Fashion",
+      "Bold Smokey Eye",
+      "Cocktail & Sangeet Minimalist",
+      "North Indian Royal Festive",
+      "Party Makeup",
+      "Reception Glam"
+    ],
+    "matched_portfolio_work": [
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781828335/1...._rygsvs.jpg",
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781828336/2...._hynjaq.jpg",
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781828337/3...._twmgdh.jpg",
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781828336/4...._fdddkw.jpg"
+    ],
+    "portfolio_alt_texts": [
+      "Facestory by Tusya - Bollywood Glam Editorial",
+      "Facestory by Tusya - Sangeet Bold Look, Delhi",
+      "Facestory by Tusya - North Indian Reception",
+      "Facestory by Tusya - High Fashion Editorial"
+    ],
+    "bio": "Tusya brings a cinematic, editorial eye to every face she works on. Based in New Delhi, she has created looks for Bollywood celebrities, fashion editorial shoots, and high-profile North Indian weddings. Her signature bold-meets-refined aesthetic turns every bride into a headliner.",
+    "experience_years": 6,
+    "rating": 4.8,
+    "review_count": 178,
+    "instagram_handle": "@facestoryby_tusya",
+    "instagram_url": "https://www.instagram.com/facestoryby_tusya",
+    "whatsapp_number": "919876543211",
+    "whatsapp_display": "+91-98765-43211",
+    "initials": "TU",
+    "gradient_bg": "linear-gradient(135deg, #4A1942 0%, #9B4F8E 100%)",
+    "badge": "Celebrity Artist",
+    "badge_color": "#9B4F8E",
+    "response_time": "Usually replies within 3 hours",
+    "bookings_this_month": 5,
+    "conversion_rate": 88,
+    "monthly_revenue": 110000,
+    "availability_status": "Available",
+    "next_available": "June 18, 2026",
+    "travel_available": true,
+    "languages": ["Hindi", "English", "Punjabi"]
+  },
+  {
+    "id": "artist_003",
+    "name": "Geetanjali",
+    "business_name": "Geetanjali Artistry",
+    "profile_image": "gitanjli/geetanjali_profile.jpg",
+    "city": "Rajouri Garden, Delhi",
+    "city_aliases": [
+      "delhi", "rajouri", "rajouri garden", "west delhi", "punjabi bagh",
+      "kirti nagar", "pitampura", "rohini", "paschim vihar", "new delhi",
+      "ncr"
+    ],
+    "rate": 25000,
+    "rate_display": "₹25,000",
+    "rate_note": "Bridal Package · Includes trial + day-of",
+    "base_match_score": 95,
+    "match": 0,
+    "tags": [
+      "Bengali Traditional",
+      "Christian Minimalist Bridal",
+      "Soft Glam",
+      "Natural Vibe",
+      "HD Airbrush Bridal",
+      "Cocktail & Sangeet Minimalist",
+      "Engagement",
+      "Editorial Runway"
+    ],
+    "matched_portfolio_work": [
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781828174/1._yh2ham.jpg",
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781828174/2._rim06v.jpg",
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781828174/5_gwti6w.jpg",
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781828174/4_nvytoa.jpg",
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781828174/3._av8zak.jpg"
+    ],
+    "portfolio_alt_texts": [
+      "Geetanjali Artistry - Traditional Bridal, Delhi",
+      "Geetanjali Artistry - Christian Minimalist Bridal",
+      "Geetanjali Artistry - Soft Glam Engagement Look",
+      "Geetanjali Artistry - HD Airbrush Reception",
+      "Geetanjali Artistry - Editorial Soft Glam"
+    ],
+    "bio": "Delhi-based Geetanjali is celebrated for breathtakingly delicate work - from traditional bridal to understated contemporary wedding aesthetics. Her soft-touch HD airbrush technique creates a luminosity that is impossible to filter and effortless to wear all day.",
+    "experience_years": 9,
+    "rating": 4.9,
+    "review_count": 263,
+    "instagram_handle": "@geetanjali_artistry03",
+    "instagram_url": "https://www.instagram.com/geetanjali_artistry03",
+    "whatsapp_number": "919876543212",
+    "whatsapp_display": "+91-98765-43212",
+    "initials": "GA",
+    "gradient_bg": "linear-gradient(135deg, #1A3A4A 0%, #4A8FA8 100%)",
+    "badge": "Top Rated",
+    "badge_color": "#4A8FA8",
+    "response_time": "Usually replies within 1 hour",
+    "bookings_this_month": 7,
+    "conversion_rate": 94,
+    "monthly_revenue": 175000,
+    "availability_status": "Limited Slots",
+    "next_available": "June 20, 2026",
+    "travel_available": true,
+    "languages": ["Hindi", "English", "Punjabi"]
+  },
+  {
+    "id": "artist_004",
+    "name": "Erica",
+    "business_name": "Erica Makeovers",
+    "profile_image": "erica/erica_profile.jpg",
+    "city": "Saket, Delhi",
+    "city_aliases": [
+      "delhi", "saket", "south delhi", "hauz khas", "malviya nagar",
+      "vasant kunj", "chhatarpur", "green park", "new delhi", "ncr"
+    ],
+    "rate": 15000,
+    "rate_display": "₹15,000",
+    "rate_note": "Bridal Package · Trial included",
+    "base_match_score": 91,
+    "match": 0,
+    "tags": [
+      "Christian Minimalist Bridal",
+      "Soft Glam",
+      "Natural Vibe",
+      "Party Makeup",
+      "Engagement",
+      "Cocktail & Sangeet Minimalist",
+      "Bold Smokey Eye",
+      "HD Airbrush Bridal"
+    ],
+    "matched_portfolio_work": [
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781827847/2_rcwcwv.jpg",
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781827847/3_zgabam.jpg",
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781827847/1_l3bkgn.jpg",
+      "https://res.cloudinary.com/dzrmqoibo/image/upload/v1781827847/WhatsApp_Image_2026-06-17_at_9.59.09_PM_y86rfj.jpg"
+    ],
+    "portfolio_alt_texts": [
+      "Erica Makeovers - Christian Bridal, Delhi",
+      "Erica Makeovers - Soft Natural Glam Look",
+      "Erica Makeovers - Cocktail Party Makeup",
+      "Erica Makeovers - Engagement Soft Glam"
+    ],
+    "bio": "Erica is South Delhi's go-to artist for brides who want to look like the best version of themselves - natural, luminous, and effortlessly polished. Trusted by the city's modern clientele, she specialises in soft contemporary aesthetics that feel as good as they look.",
+    "experience_years": 5,
+    "rating": 4.7,
+    "review_count": 142,
+    "instagram_handle": "@erica_makeovers",
+    "instagram_url": "https://www.instagram.com/erica_makeovers",
+    "whatsapp_number": "919876543213",
+    "whatsapp_display": "+91-98765-43213",
+    "initials": "ER",
+    "gradient_bg": "linear-gradient(135deg, #1A4A2E 0%, #4A9B6F 100%)",
+    "badge": "Rising Star",
+    "badge_color": "#4A9B6F",
+    "response_time": "Usually replies within 4 hours",
+    "bookings_this_month": 4,
+    "conversion_rate": 85,
+    "monthly_revenue": 60000,
+    "availability_status": "Available",
+    "next_available": "June 16, 2026",
+    "travel_available": false,
+    "languages": ["English", "Hindi"]
+  },
+  {
+    "id": "artist_005",
+    "name": "Womaniya Salon",
+    "business_name": "Womaniya Makeup & Salon",
+    "profile_image": "Womania/womaniya_profile.jpg",
+    "city": "Lajpat Nagar, Delhi",
+    "city_aliases": [
+      "delhi", "lajpat", "lajpat nagar", "south east delhi", "amar colony",
+      "kalkaji", "bhogal", "new friends colony", "new delhi", "ncr"
+    ],
+    "rate": 12000,
+    "rate_display": "₹12,000",
+    "rate_note": "Bridal Package · Includes trial session",
+    "base_match_score": 88,
+    "match": 0,
+    "tags": [
+      "South Indian Bridal",
+      "Traditional",
+      "Heavy Jewelry Match",
+      "Warm Glam",
+      "Reception Glam",
+      "Engagement",
+      "Natural Vibe",
+      "HD Airbrush Bridal"
+    ],
+    "matched_portfolio_work": [
+      "https://i.imgur.com/iItUDgY.jpeg",
+      "https://i.imgur.com/fXWgXkk.jpeg",
+      "https://i.imgur.com/tJI9NAm.jpeg"
+    ],
+    "portfolio_alt_texts": [
+      "Womaniya Salon - Bridal Makeup, Delhi",
+      "Womaniya Salon - Traditional Heavy Jewellery Look",
+      "Womaniya Salon - Reception Glam"
+    ],
+    "bio": "Womaniya Makeup & Salon is Lajpat Nagar's premier destination for authentic Indian bridal artistry. Their team understands the weight of bridal lehengas, the brilliance of traditional jewellery, and the warmth of Delhi's grand wedding traditions. Every look is built to honour that heritage with grace.",
+    "experience_years": 11,
+    "rating": 4.8,
+    "review_count": 312,
+    "instagram_handle": "@womaniya_makeup_salon",
+    "instagram_url": "https://www.instagram.com/womaniya_makeup_salon",
+    "whatsapp_number": "919876543214",
+    "whatsapp_display": "+91-98765-43214",
+    "initials": "WS",
+    "gradient_bg": "linear-gradient(135deg, #4A1A1A 0%, #A84040 100%)",
+    "badge": "Heritage Specialist",
+    "badge_color": "#A84040",
+    "response_time": "Usually replies within 2 hours",
+    "bookings_this_month": 8,
+    "conversion_rate": 91,
+    "monthly_revenue": 96000,
+    "availability_status": "Available",
+    "next_available": "June 17, 2026",
+    "travel_available": true,
+    "languages": ["Hindi", "English", "Punjabi"]
+  }
+];
+
+const CATS=[
+  {name:'Bridal & wedding',key:'bridal',desc:'Traditional, fusion, and contemporary bridal looks',count:'4 artists',bg:'linear-gradient(150deg,#2D0A3E,#8B3A52)',light:true},
+  {name:'Bold & dramatic',key:'bold',desc:'Smokey eyes, cut crease, intense lips',count:'1 artist',bg:'linear-gradient(150deg,#1A0526,#4A1B6D)',light:true},
+  {name:'Natural & no-makeup',key:'natural',desc:'Skin-first, dewy, effortless finishes',count:'1 artist',bg:'linear-gradient(150deg,#2D0A3E,#6B2D8B)',light:true},
+  {name:'Editorial',key:'editorial',desc:'High fashion, concept, campaign work',count:'2 artists',bg:'linear-gradient(150deg,#0D0118,#2D0A3E)',light:true},
+  {name:'Glam & party',key:'glam',desc:'Festive, night-out, red carpet ready',count:'3 artists',bg:'linear-gradient(150deg,#2D0A3E,#633806)',light:true},
+  {name:'SFX & theatrical',key:'sfx',desc:'Special effects, costume, stage makeup',count:'0 artists',bg:'linear-gradient(150deg,#0D0118,#1A0526)',light:true},
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CANVAS AI MATCHING ENGINE v2.1
+// ═══════════════════════════════════════════════════════════════════════════
+const CANVAS_MATCHER = (() => {
+  const W = {
+    TAG_MATCH:      14,
+    EXACT_PHRASE:   6,
+    CITY_MATCH:     18,
+    OCCASION_MATCH: 10,
+    BUDGET_WITHIN:  5,
+    BUDGET_OVER_10: -8,
+    BUDGET_OVER_30: -15,
+    BUDGET_OVER_30P:-25,
+    EMPTY_QUERY:   -20,
+    SCORE_MAX:      99,
+    SCORE_MIN:      40
+  };
+
+  const TAG_KEYWORDS = {
+    "South Indian Bridal": ["south indian", "tamil", "telugu", "malayalam", "kannada", "silk saree", "kanchipuram", "temple jewellery", "temple jewelry", "south bride", "dravidian", "madisar", "pattupavadai"],
+    "North Indian Royal Festive": ["north indian", "punjabi", "rajasthani", "royal", "festive", "lehenga", "banarasi", "mughal", "regal", "sherwani", "anarkali", "lucknowi", "zardozi", "kundan bridal"],
+    "Bollywood Celebrity Glam": ["bollywood", "celebrity", "glam", "glamour", "filmy", "dramatic", "ott", "red carpet", "awards", "film", "cinematic", "screen ready", "star"],
+    "HD Airbrush Bridal": ["airbrush", "hd", "flawless", "camera ready", "photogenic", "high definition", "no filter", "filter free", "porcelain", "glass skin bridal", "studio finish"],
+    "Cocktail & Sangeet Minimalist": ["cocktail", "sangeet", "minimalist", "minimal", "understated", "clean", "elegant", "modern", "pre wedding event", "ladies sangeet", "mehendi look"],
+    "Bengali Traditional": ["bengali", "bong", "durga puja", "sindoor", "lal paar", "shankha", "pola", "traditional bengali", "bengal bride", "red and white", "loha"],
+    "Christian Minimalist Bridal": ["christian", "church", "white wedding", "gown", "veil", "cross", "minimalist bride", "western bridal", "catholic", "protestant", "chapel", "floral bridal", "dewy bride"],
+    "Editorial Runway": ["editorial", "runway", "fashion", "vogue", "magazine", "high fashion", "avant garde", "artistic", "concept", "shoot ready", "campaign", "lookbook"],
+    "Traditional": ["traditional", "classic", "heritage", "ethnic", "cultural", "conventional", "saree", "salwar", "dupatta"],
+    "Warm Glam": ["warm", "golden", "bronze", "terracotta", "earthy", "sunset", "nude glam", "brown tones", "copper", "amber", "rust", "peach glam"],
+    "Reception Glam": ["reception", "post wedding", "evening", "night look", "reception makeup", "second day", "party after wedding"],
+    "Natural Vibe": ["natural", "no makeup", "fresh", "dewy", "glass skin", "effortless", "barely there", "clean girl", "skin first", "breathable", "lightweight"],
+    "Soft Glam": ["soft", "subtle", "gentle", "delicate", "feminine", "pretty", "blush", "pink tones", "rosy", "soft smokey", "diffused"],
+    "Engagement": ["engagement", "ring ceremony", "roka", "pre wedding", "sagai", "promise", "engaged", "ring"],
+    "High Fashion": ["high fashion", "couture", "designer", "luxury makeup", "elite", "atelier", "fashion week", "label"],
+    "Bold Smokey Eye": ["smokey", "bold", "dramatic eye", "kohl", "dark eye", "intense", "edgy", "cat eye", "cut crease", "black eye", "smoked out"],
+    "Party Makeup": ["party", "night out", "birthday", "club", "event makeup", "celebration", "festive look", "girls night", "date night", "anniversary"],
+    "Heavy Jewelry Match": ["heavy jewelry", "heavy jewellery", "temple jewelry", "layered necklace", "maang tikka", "nath", "kundan", "polki", "rani haar", "choker bridal", "statement jewelry"]
+  };
+
+  const CITY_GROUPS = {
+    "south delhi": [
+      "south delhi", "south ex", "south extension", "saket", "hauz khas", 
+      "malviya nagar", "vasant kunj", "chhatarpur", "green park", "lajpat", 
+      "lajpat nagar", "greater kailash", "gk", "def col", "amar colony", "kalkaji"
+    ],
+    "west delhi": [
+      "west delhi", "rajouri", "rajouri garden", "punjabi bagh", 
+      "kirti nagar", "pitampura", "rohini", "paschim vihar"
+    ],
+    "new delhi": [
+      "new delhi", "delhi", "central delhi", "cp", "connaught", 
+      "connaught place", "karol bagh", "bhogal", "new friends colony"
+    ],
+    "gurgaon": [
+      "gurgaon", "gurugram", "cyber hub", "dlf phase", "ncr"
+    ],
+    "noida": [
+      "noida", "greater noida", "ghaziabad", "faridabad", "ncr"
+    ]
+};
+
+  function norm(str) { return (str || "").toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim(); }
+
+  function detectCity(queryNorm) {
+    for (const [city, aliases] of Object.entries(CITY_GROUPS)) {
+      for (const alias of aliases) {
+        const pattern = new RegExp(`(^|\\s)${alias}(\\s|$)`);
+        if (pattern.test(queryNorm)) return city;
+      }
+    }
+    return null;
+  }
+
+  function artistCity(artist) {
+    const n = norm(artist.city);
+    for (const [city, aliases] of Object.entries(CITY_GROUPS)) {
+      if (aliases.some(a => n.includes(a))) return city;
+    }
+    return n;
+  }
+
+  function scoreOne(artist, queryText, options) {
+    const { occasionPills = [], budgetMax = null, extractedTags = [] } = options;
+    const q = norm(queryText);
+    const noInput = q.length === 0 && occasionPills.length === 0 && extractedTags.length === 0;
+
+    let score = 55 + (artist.rating); // Base around 60%
+    const reasons = [];
+    const cautions = [];
+    const matchedTags = [];
+
+    if (noInput) score += W.EMPTY_QUERY;
+
+    for (const tag of artist.tags) {
+      const keywords = TAG_KEYWORDS[tag] || [];
+      const tagNorm = norm(tag);
+      let hit = false;
+
+      if (q.length > 0) {
+        hit = keywords.some(kw => q.includes(kw));
+        if (hit && q.includes(tagNorm)) score += W.EXACT_PHRASE;
+      }
+      if (!hit && extractedTags.length > 0) {
+        hit = extractedTags.some(et => {
+          const en = norm(et);
+          return keywords.some(kw => en.includes(kw)) || en.includes(tagNorm) || tagNorm.includes(en);
+        });
+      }
+      if (!hit && occasionPills.length > 0) {
+        hit = occasionPills.some(pill => {
+          const pn = norm(pill);
+          return keywords.some(kw => pn.includes(kw)) || tagNorm.includes(pn) || pn.includes(tagNorm.split(" ")[0]);
+        });
+      }
+
+      if (hit) {
+        score += W.TAG_MATCH;
+        matchedTags.push(tag);
+      }
+    }
+
+    if (matchedTags.length > 0) reasons.push(`Specialises in: ${matchedTags.slice(0, 2).join(" · ")}`);
+
+    const queryC = detectCity(q);
+    const artistC = artistCity(artist);
+
+    if (queryC !== null) {
+      if (queryC === artistC) {
+        score += W.CITY_MATCH;
+        reasons.push(`Based in ${artist.city} - your selected city`);
+      } else {
+        cautions.push(`Based in ${artist.city} · Travel bookings available`);
+      }
+    }
+
+    if (occasionPills.length > 0) {
+      let hits = 0;
+      for (const pill of occasionPills) {
+        const pn = norm(pill);
+        const artistTagNorms = artist.tags.map(t => norm(t));
+        if (artistTagNorms.some(t => t.includes(pn) || pn.includes(t.split(" ")[0]))) {
+          score += W.OCCASION_MATCH;
+          hits++;
+        }
+      }
+      if (hits > 0) reasons.push(`Matched ${hits} selected occasion${hits > 1 ? "s" : ""}`);
+    }
+
+    if (budgetMax !== null && budgetMax > 0) {
+      const diff = artist.rate - budgetMax;
+      const ratio = diff / budgetMax;
+
+      if (diff <= 0) {
+        score += W.BUDGET_WITHIN;
+        const saving = (budgetMax - artist.rate).toLocaleString("en-IN");
+        reasons.push(`Within budget · ₹${saving} to spare`);
+      } else if (ratio <= 0.10) {
+        score += W.BUDGET_OVER_10;
+        cautions.push(`Slightly over budget by ₹${diff.toLocaleString("en-IN")}`);
+      } else if (ratio <= 0.30) {
+        score += W.BUDGET_OVER_10 + W.BUDGET_OVER_30;
+        cautions.push(`${Math.round(ratio * 100)}% above your budget`);
+      } else {
+        score += W.BUDGET_OVER_10 + W.BUDGET_OVER_30P;
+        cautions.push(`Premium rate · Above stated budget`);
+      }
+    }
+
+    if (artist.rating >= 4.8) reasons.push(`${artist.rating}★ · ${artist.review_count.toLocaleString("en-IN")} verified reviews`);
+
+    score = Math.min(score, W.SCORE_MAX);
+    score = Math.max(score, W.SCORE_MIN);
+
+    return { ...artist, match: Math.round(score), matchedTags, matchReasons: reasons.slice(0, 3), cautions: cautions.slice(0, 2) };
+  }
+
+  function runMatch(queryText, options = {}) {
+    const results = ARTISTS_DB.map(a => scoreOne(a, queryText, options));
+    results.sort((a, b) => {
+      if (b.match !== a.match) return b.match - a.match;
+      if (b.rating !== a.rating) return b.rating - a.rating;
+      return b.review_count - a.review_count;
+    });
+    return results;
+  }
+
+  return { runMatch, scoreOne, detectCity, norm };
+})();
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TAG EXTRACTION & UI MOCKS
+// ═══════════════════════════════════════════════════════════════════════════
+const MOCK_TAG_SCENARIOS = {
+  "south_indian": {
+    tags: [
+      { label: "South Indian Bridal",  confidence: "high"   },
+      { label: "Silk Saree",           confidence: "high"   },
+      { label: "Temple Jewellery",       confidence: "high"   },
+      { label: "Warm Gold Tones",       confidence: "medium" },
+      { label: "Heavy Jewellery Match", confidence: "medium" }
+    ],
+    palette: ["#8B4513", "#C9A84C", "#D2691E", "#8B6914", "#F4A460"],
+    paletteLabel: "Warm terracotta · Antique gold · Silk red",
+    summary: "Your inspiration reflects a traditional South Indian bridal aesthetic with rich warm undertones and ornate jewellery-forward composition. Matching you with artists who excel in this heritage style."
+  },
+  "bollywood": {
+    tags: [
+      { label: "Bollywood Glam",       confidence: "high"   },
+      { label: "Dramatic Eye",         confidence: "high"   },
+      { label: "High Shine",           confidence: "medium" },
+      { label: "Celebrity Aesthetic", confidence: "medium" },
+      { label: "Red Carpet Ready",     confidence: "low"    }
+    ],
+    palette: ["#1A1A2E", "#C9A84C", "#E8D5A0", "#8B0000", "#FFD700"],
+    paletteLabel: "Deep noir · Champagne · Crimson",
+    summary: "Strong cinematic energy detected - dramatic eyes, high-contrast lighting, and a red-carpet confidence. Your ideal artist brings editorial flair to every face."
+  },
+  "minimalist": {
+    tags: [
+      { label: "Soft Glam",            confidence: "high"   },
+      { label: "Natural Skin",         confidence: "high"   },
+      { label: "Minimalist Bridal",   confidence: "high"   },
+      { label: "Dewy Finish",         confidence: "medium" },
+      { label: "Neutral Palette",     confidence: "medium" }
+    ],
+    palette: ["#F5E6D3", "#D4B896", "#C8A882", "#E8DDD0", "#B8997A"],
+    paletteLabel: "Nude linen · Warm ivory · Blush beige",
+    summary: "Your inspiration speaks to effortless elegance - luminous skin, barely-there colour, and a freshness that looks as good in person as on camera."
+  },
+  "bengali": {
+    tags: [
+      { label: "Bengali Traditional", confidence: "high"   },
+      { label: "Red & White",         confidence: "high"   },
+      { label: "Lal Paar Saree",      confidence: "high"   },
+      { label: "Soft Glam",           confidence: "medium" },
+      { label: "Natural Vibe",        confidence: "medium" }
+    ],
+    palette: ["#C0392B", "#F5F5F0", "#E8C9A0", "#8B6914", "#2C1810"],
+    paletteLabel: "Sindoor red · Ivory white · Warm gold",
+    summary: "Your inspiration carries the unmistakable palette of Bengali bridal tradition - red and white, understated radiance, and a timeless cultural grace."
+  },
+  "christian": {
+    tags: [
+      { label: "Christian Minimalist Bridal", confidence: "high"   },
+      { label: "Dewy Skin",                   confidence: "high"   },
+      { label: "Soft Glam",                   confidence: "high"   },
+      { label: "Floral Aesthetic",             confidence: "medium" },
+      { label: "Natural Vibe",                 confidence: "medium" }
+    ],
+    palette: ["#FAFAFA", "#F0E6D2", "#D4B896", "#C8A882", "#E8C9C9"],
+    paletteLabel: "Bridal white · Warm blush · Soft ivory",
+    summary: "A clean, luminous aesthetic - your inspiration calls for a light touch, dewy skin, and understated elegance that photographs beautifully in natural light."
+  },
+  "default": {
+    tags: [
+      { label: "Bridal Occasion",      confidence: "high"   },
+      { label: "Festive Aesthetic",    confidence: "medium" },
+      { label: "Warm Tones",           confidence: "medium" },
+      { label: "Traditional Elements", confidence: "low"    }
+    ],
+    palette: ["#C9A84C", "#D4B896", "#8B6914", "#F0E6D2", "#6B5B45"],
+    paletteLabel: "Champagne · Warm cream · Antique gold",
+    summary: "Inspiration uploaded. Your visual aesthetic has been analysed and distilled into aesthetic tags. Showing you the strongest portfolio matches."
+  }
+};
+
+function detectMockScenario(queryText, occasionPills) {
+  const q = CANVAS_MATCHER.norm((queryText || "") + " " + (occasionPills || []).join(" "));
+
+  if (q.match(/bengali|bong|durga|lal paar|shankha|pola/)) return "bengali";
+  if (q.match(/christian|church|white wedding|gown|veil|chapel/)) return "christian";
+  if (q.match(/south indian|tamil|telugu|silk saree|temple jewel|kanchipuram/)) return "south_indian";
+  if (q.match(/bollywood|celebrity|glam|dramatic|filmy|red carpet/)) return "bollywood";
+  if (q.match(/minimal|natural|soft|dewy|clean|effortless|nude/)) return "minimalist";
+
+  const fileName = document.getElementById("preview-filename").textContent || "default";
+  
+  let hash = 0;
+  for (let i = 0; i < fileName.length; i++) {
+    hash = ((hash << 5) - hash) + fileName.charCodeAt(i);
+    hash = hash & hash; 
+  }
+  hash = Math.abs(hash); 
+
+  const demoScenarios = ["bollywood", "christian", "south_indian", "minimalist", "bengali"];
+  const chosenScenario = demoScenarios[hash % demoScenarios.length];
+
+  return chosenScenario;
+}
+
+function renderExtractedTagsBadges(realExtractedTags = [], queryText = "", occasionPills = [], useRealTags = false) {
+  const panel = document.getElementById("canvas-ai-analysis-panel");
+  const tagsContainer = document.getElementById("extracted-tags-container");
+  const paletteContainer = document.getElementById("colour-palette-container");
+  const summaryText = document.getElementById("ai-summary-text");
+  const confidenceText = document.getElementById("analysis-confidence-text");
+
+  if (!panel) return;
+  let scenario, tagsToRender;
+
+  if (useRealTags && realExtractedTags.length > 0) {
+    tagsToRender = realExtractedTags.map(t => ({ label: t, confidence: "high" }));
+    scenario = MOCK_TAG_SCENARIOS["default"];
+  } else {
+    const key = detectMockScenario(queryText, occasionPills);
+    scenario = MOCK_TAG_SCENARIOS[key];
+    tagsToRender = scenario.tags;
+  }
+
+  window.CANVAS_EXTRACTED_TAGS = tagsToRender.map(t => t.label);
+
+  panel.style.display = "block";
+  confidenceText.textContent = "Analysing...";
+  tagsContainer.innerHTML = "";
+  paletteContainer.innerHTML = "";
+  summaryText.textContent = "";
+
+  setTimeout(() => {
+    confidenceText.textContent = `${tagsToRender.length} tags · High confidence`;
+    tagsToRender.forEach((tag, i) => {
+      setTimeout(() => {
+        const badge = document.createElement("span");
+        badge.className = `ext-tag-badge${tag.confidence === "high" ? " high-confidence" : ""}`;
+        badge.textContent = tag.label;
+        badge.setAttribute("role", "listitem");
+        badge.style.animationDelay = `${i * 60}ms`;
+        tagsContainer.appendChild(badge);
+      }, i * 80);
+    });
+
+    scenario.palette.forEach((hex, i) => {
+      setTimeout(() => {
+        const swatch = document.createElement("div");
+        swatch.className = "colour-swatch";
+        swatch.style.backgroundColor = hex;
+        swatch.title = hex;
+        paletteContainer.appendChild(swatch);
+      }, i * 60);
+    });
+
+    setTimeout(() => {
+      const label = document.createElement("span");
+      label.className = "colour-swatch-label";
+      label.textContent = scenario.paletteLabel;
+      paletteContainer.appendChild(label);
+    }, scenario.palette.length * 60 + 100);
+
+    setTimeout(() => { summaryText.textContent = scenario.summary; }, tagsToRender.length * 80 + 200);
+  }, 200);
+}
+
+function hideAnalysisPanel() {
+  const panel = document.getElementById("canvas-ai-analysis-panel");
+  if (panel) panel.style.display = "none";
+  window.CANVAS_EXTRACTED_TAGS = [];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// IMAGE UPLOAD HANDLER
+// ═══════════════════════════════════════════════════════════════════════════
+let uploadSrc = '';
+
+function handleDragOver(e) {
+  e.preventDefault(); e.stopPropagation();
+  document.getElementById("canvas-upload-zone").classList.add("drag-active");
+}
+function handleDragLeave(e) {
+  e.preventDefault();
+  document.getElementById("canvas-upload-zone").classList.remove("drag-active");
+}
+function handleDrop(e) {
+  e.preventDefault(); e.stopPropagation();
+  document.getElementById("canvas-upload-zone").classList.remove("drag-active");
+  const file = e.dataTransfer.files?.[0];
+  if (file) processImageFile(file);
+}
+function handleFileSelected(e) {
+  const file = e.target.files?.[0];
+  if (file) processImageFile(file);
+}
+
+function processImageFile(file) {
+  if (!file.type.match(/image\/(jpeg|jpg|png|webp)/i)) { toast("Please upload a JPG, PNG, or WEBP image."); return; }
+  if (file.size > 10 * 1024 * 1024) { toast("Image too large. Please use an image under 10MB."); return; }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    uploadSrc = e.target.result;
+    showImagePreview(uploadSrc, file.name);
+    runMockVisionAnalysis();
+  };
+  reader.readAsDataURL(file);
+}
+
+function showImagePreview(dataURL, filename) {
+  document.getElementById("upload-preview-img").src = dataURL;
+  document.getElementById("preview-filename").textContent = filename.length > 30 ? filename.substring(0, 27) + "…" : filename;
+  document.getElementById("upload-placeholder").style.display = "none";
+  document.getElementById("upload-preview").style.display = "block";
+  document.getElementById("canvas-upload-zone").classList.add("has-image");
+  const clearBtn = document.getElementById("search-clear-btn");
+  if (clearBtn) clearBtn.style.display = "flex";
+}
+
+function removeUploadedImage(e) {
+  if (e && e.stopPropagation) e.stopPropagation();
+  uploadSrc = '';
+  document.getElementById("upload-preview").style.display = "none";
+  document.getElementById("upload-placeholder").style.display = "block";
+  document.getElementById("canvas-upload-zone").classList.remove("has-image");
+  document.getElementById("canvas-file-input").value = "";
+  hideAnalysisPanel();
+  toast("Image removed. You can upload a new one.");
+}
+
+function runMockVisionAnalysis() {
+  const queryText = document.getElementById("canvas-query-input")?.value || "";
+  const occasionPills = getSelectedOccasionPills();
+
+  setTimeout(() => {
+    const scanOverlay = document.getElementById("preview-scanning");
+    if (scanOverlay) scanOverlay.style.display = "none";
+    renderExtractedTagsBadges([], queryText, occasionPills, false);
+    setTimeout(() => {
+      handleSearch();
+      toast("✨ Aesthetic analysis complete. Showing matched artists.");
+    }, 400);
+  }, 1900);
+}
+
+function clearSearch() {
+  document.getElementById("canvas-query-input").value = "";
+  const clearBtn = document.getElementById("search-clear-btn");
+  if (clearBtn) clearBtn.style.display = "none";
+  removeUploadedImage(null);
+  hideAnalysisPanel();
+}
+
+function getSelectedOccasionPills() {
+  return [...$$('.pl.on')].map(p => p.textContent);
+}
+
+// ─── CARD RENDERER ───
+function card(a, showM) {
+  let reasonsHtml = '';
+  if (showM) {
+    reasonsHtml = `<div style="margin-top:12px; padding-top:12px; border-top:1px dashed var(--bd);">`;
+    if (a.matchReasons && a.matchReasons.length > 0) {
+      a.matchReasons.forEach(r => reasonsHtml += `<p style="font-size:11.5px; color:var(--mp); margin-bottom:4px;">✨ ${r}</p>`);
+    }
+    if (a.cautions && a.cautions.length > 0) {
+      a.cautions.forEach(c => reasonsHtml += `<p style="font-size:11.5px; color:var(--gd); margin-bottom:4px;">⚠️ ${c}</p>`);
+    }
+    reasonsHtml += `</div>`;
+  }
+
+  const badgeBg = a.match >= 90 ? 'var(--g)' : '#E8E0D5';
+  const badgeColor = a.match >= 90 ? 'var(--dp)' : '#5A3A6B';
+
+  return `<div class="acard" onclick="showProfile('${a.id}')">
+    <div class="aph" style="background:${a.gradient_bg}; position:relative; overflow:hidden;">
+      ${a.profile_image 
+          ? `<img src="${a.profile_image}" alt="${a.name}" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+             <span class="ain" style="display:none; position:relative; z-index:1;">${a.initials}</span>` 
+          : `<span class="ain" style="position:relative; z-index:1;">${a.initials}</span>`
+      }
+      ${showM ? `<span class="mbdg" style="background:${badgeBg}; color:${badgeColor}; z-index:2;">${a.match}% match</span>` : ''}
+    </div>
+    <div class="gstr"></div>
+    <div class="abdy">
+      <p class="anm">${a.name}</p>
+      <p class="amet">${a.city} &nbsp;·&nbsp; ${a.experience_years} yrs experience</p>
+      <div class="atgs">${a.tags.slice(0,3).map(t=>`<span class="atg">${t}</span>`).join('')}</div>
+      <div class="aft">
+        <p class="apr">from ₹${a.rate.toLocaleString('en-IN')}</p>
+        <p class="art">⭐ ${a.rating} <span style="color:var(--sp)">(${a.review_count})</span></p>
+      </div>
+      ${reasonsHtml}
+      <div class="aact" style="margin-top:14px;">
+        <button class="vbtn" onclick="event.stopPropagation();showProfile('${a.id}')">View profile</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─── CORE UI FUNCTIONS ───
+let matchList = [...ARTISTS_DB];
+
+function renderHome() {
+  ID('home-grid').innerHTML = ARTISTS_DB.slice(0, 3).map(a => card(a, false)).join('');
+  
+  ID('cat-grid').innerHTML = CATS.map(c => {
+    const isLight = c.light; 
+    const borderStyle = isLight ? 'none' : '2px solid #C9A84C'; 
+    const titleColor = isLight ? '#fff' : '#1A0526';
+    const descColor = isLight ? 'rgba(196,168,212,.9)' : '#5A3A6B';
+    const countColor = isLight ? 'var(--g)' : '#C9A84C';
+    
+    return `
+    <div class="ccard" style="background:${c.bg}; border:${borderStyle};" onclick="showCat('${c.key}')">
+      <div class="cov" style="background:rgba(0,0,0,${isLight ? .2 : 0})"></div>
+      <div class="ccon">
+        <p class="cnm" style="color:${titleColor}">${c.name}</p>
+        <p class="cds" style="color:${descColor}">${c.desc}</p>
+        <p class="cct" style="color:${countColor}; font-weight:600;">${c.count} →</p>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function handleSearch() {
+  const queryText = document.getElementById("canvas-query-input").value;
+  const occasionPills = getSelectedOccasionPills();
+  const extractedTags = window.CANVAS_EXTRACTED_TAGS || [];
+  const budgetMax = parseInt(ID('budslider')?.value) || null;
+
+  matchList = CANVAS_MATCHER.runMatch(queryText, {
+    occasionPills,
+    budgetMax: null, 
+    extractedTags
+  });
+
+  let head = 'Artists matched to your look';
+  let sub = `${matchList.length} artists found - ranked by aesthetic alignment`;
+  if (queryText) { const w = queryText.split(' ').slice(0, 4).join(' '); head = `Best matches for "${w}..."`; }
+  if (occasionPills.length > 0) sub += ` · Occasions: ${occasionPills.join(', ')}`;
+
+  ID('rhead').textContent = head;
+  ID('rsub').textContent = sub;
+
+  const th = ID('rthumb');
+  if (uploadSrc) { th.src = uploadSrc; th.style.display = 'block'; }
+  else { th.style.display = 'none'; }
+
+  ID('budslider').value = 55000;
+  ID('budlbl').textContent = 'Up to ₹55,000';
+  $$('#page-results .fck input').forEach(c => c.checked = false);
+
+  renderRes();
+  GO('results');
+
+  if (extractedTags.length === 0) toast(`Found ${matchList.length} artists for you ✨`);
+}
+
+function renderRes() {
+  const bud = parseInt(ID('budslider').value) || 55000;
+  const checked = [...$$('#page-results .fck input:checked')].map(c => c.value.toLowerCase());
+  let list = matchList.filter(a => {
+    const budOk = a.rate <= bud;
+    const cityOk = checked.length === 0 || checked.some(c => a.city_aliases.includes(c) || a.city.toLowerCase().includes(c));
+    return budOk && cityOk;
+  });
+  ID('rcnt').textContent = `Showing ${list.length} of ${ARTISTS_DB.length} artists`;
+  ID('res-grid').innerHTML = list.length
+    ? list.map(a => card(a, true)).join('')
+    : `<div class="nores"><h3>No artists found</h3><p>Try adjusting your budget or city filters.</p></div>`;
+}
+
+function sortR(v) {
+  if (v === 'match') matchList.sort((a, b) => b.match - a.match);
+  else if (v === 'rating') matchList.sort((a, b) => b.rating - a.rating);
+  else if (v === 'plo') matchList.sort((a, b) => a.rate - b.rate);
+  else if (v === 'phi') matchList.sort((a, b) => b.rate - a.rate);
+  renderRes();
+}
+
+function updBudget(v) { ID('budlbl').textContent = `Up to ₹${parseInt(v).toLocaleString('en-IN')}`; renderRes(); }
+function applyF() { renderRes(); }
+
+const BFIL = ['All', 'Bridal', 'Bold', 'Natural', 'Editorial', 'Glam'];
+let BF = 'All';
+
+function renderBrowse() {
+  const q = (ID('bsrch')?.value || '').toLowerCase();
+  const filtered = ARTISTS_DB.filter(a => {
+    const ms = !q || a.name.toLowerCase().includes(q) || a.city.toLowerCase().includes(q) || a.tags.some(t => t.toLowerCase().includes(q));
+    const mc = BF === 'All' || a.tags.some(t => t.toLowerCase().includes(BF.toLowerCase()));
+    return ms && mc;
+  });
+  ID('browse-grid').innerHTML = filtered.length
+    ? filtered.map(a => card(a, false)).join('')
+    : `<div class="nores"><h3>No artists found</h3><p>Try a different search or filter.</p></div>`;
+  ID('bfbar').innerHTML = BFIL.map(f => `<button class="fp ${f === BF ? 'on' : ''}" onclick="setBF('${f}')">${f}</button>`).join('');
+}
+function setBF(f) { BF = f; renderBrowse(); }
+
+function showCat(key) {
+  const cat = CATS.find(c => c.key === key);
+  const res = ARTISTS_DB.filter(a => a.tags.some(t => t.toLowerCase().includes(key)));
+  ID('cat-head').textContent = cat.name + ' artists';
+  ID('cat-sub').textContent = `${res.length} artists specialising in ${cat.name.toLowerCase()}`;
+  ID('cat-grid-res').innerHTML = res.length
+    ? res.map(a => card(a, false)).join('')
+    : `<div class="nores"><h3>More artists coming soon</h3><p>We are growing fast - check back soon.</p></div>`;
+  GO('cat');
+}
+
+function buildWhatsAppLink(artist, clientQuery = "") {
+  const hansikaNumber = "919848285649";
+  const artistName = artist.name; 
+  
+  const context = clientQuery.trim() ? ` (Interested in: ${clientQuery})` : "";
+  
+  const message = `Hi Hansika! I’ve been browsing your platform CANVAS and found an artist whose work I really love: ${artistName}.${context} Their aesthetic aligns perfectly with what I'm looking for. I'd love to discuss a potential booking.`;
+
+  return `https://wa.me/${hansikaNumber}?text=${encodeURIComponent(message)}`;
+}
+
+function showProfile(id) {
+  const a = ARTISTS_DB.find(x => x.id === id); if (!a) return;
+  ID('profile-inner').innerHTML = `
+    <div class="ppage">
+      <div class="phero">
+        <button class="rback" onclick="GO('home')" style="margin-bottom:1.5rem;display:inline-flex;align-items:center;gap:6px;">← Back</button>
+        <div class="phi">
+          <div style="width:130px; height:130px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:${a.gradient_bg}; border:3px solid rgba(200,161,90,.4); flex-shrink:0; overflow:hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.2); position:relative;">
+  ${a.profile_image 
+      ? `<img src="${a.profile_image}" alt="" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+         <span style="display:none; font-family:'Cormorant Garamond',serif;font-style:italic;font-size:44px;color:rgba(255,255,255,.6);">${a.initials}</span>` 
+      : `<span style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:44px;color:rgba(255,255,255,.6);">${a.initials}</span>`
+  }
+</div>
+          <div class="pinf">
+            <p class="pnm">${a.name} <span class="vbdg">✓ Verified</span></p>
+            <p class="pmt">📍 ${a.city} &nbsp;·&nbsp; ${a.experience_years} yrs experience</p>
+            <div class="ptgs">${a.tags.map(t => `<span class="ptg">${t}</span>`).join('')}</div>
+            <p class="prt">⭐ ${a.rating} (${a.review_count} reviews) &nbsp;·&nbsp; ${a.rate_display} ${a.rate_note.split('·')[0]}</p>
+            <a href="${buildWhatsAppLink(a)}" target="_blank" class="ctb" style="text-decoration:none; display:inline-block; padding:12px 28px; background:var(--g); color:var(--dp); border-radius:6px; font-family:'Jost',sans-serif; font-size:13px; font-weight:500;">
+                Send enquiry on WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="pbdy">
+        <p class="pbio">"${a.bio}"</p>
+        <p class="psh">Verified Portfolio</p>
+        <p class="pss">Real client work showcasing ${a.name}'s signature aesthetic and technical execution.</p>
+        <div class="lgrid">
+          ${a.matched_portfolio_work.map((img, i) => {
+            const title = a.portfolio_alt_texts && a.portfolio_alt_texts[i] ? a.portfolio_alt_texts[i] : a.tags[0] + " Look";
+            return `
+            <div class="lcard">
+              <div class="limg" style="background:${a.gradient_bg}; overflow:hidden;">
+                <img src="${img}" alt="${title}" 
+      style="width:100%; height:250px; object-fit: contain; background-color: #f2f2f2;" 
+      onerror="this.onerror=null; this.src='https://placehold.co/400x250?text=Image+Unavailable';">
+                <span class="lcbdg">Portfolio Image ${i+1}</span>
+              </div>
+              <div class="lbdy">
+                <p class="lnm">${title}</p>
+                <p class="lds">A verified example of the aesthetic.</p>
+                <a href="${buildWhatsAppLink(a, title)}" target="_blank" class="enqb" style="text-decoration:none; display:block; text-align:center;">Enquire about this look</a>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+  GO('profile');
+}
+
+// ─── MODALS ───
+function openM(t){ID('MODAL').classList.add('open');swM(t);}
+function closeM(){ID('MODAL').classList.remove('open');}
+function closeMO(e){if(e.target===ID('MODAL'))closeM();}
+function swM(t){
+  ['login','signup'].forEach(x=>{
+    const btn = ID('mtb-'+x);
+    const content = ID('mc-'+x);
+    if(btn) btn.classList.toggle('on',x===t);
+    if(content) content.classList.toggle('on',x===t);
+  });
+}
+function selR(r){
+  const rc = ID('rc');
+  const ra = ID('ra');
+  if(rc) rc.classList.toggle('on',r==='c');
+  if(ra) ra.classList.toggle('on',r==='a');
+}
+function tpl(el){el.classList.toggle('on');}
+
+// ─── DEMO AUTHENTICATION (FOR RECORDING) ───
+
+function doGoogleAuth() {
+  closeM();
+  setTimeout(() => {
+    toast(`Welcome to Canvas! ✨`);
+    document.querySelector('.bgs').textContent = "My Account";
+    document.querySelector('.bg').style.display = "none"; // Hides 'Join Canvas'
+  }, 400);
+}
+
+function doLogin() {
+  const email = ID('log-email').value;
+  const pass = ID('log-pass').value;
+  if(!email || !pass) { toast('Please enter your email and password'); return; }
+
+  closeM();
+  setTimeout(() => {
+    toast('Logged in successfully! ✨');
+    document.querySelector('.bgs').textContent = "My Account";
+    document.querySelector('.bg').style.display = "none";
+  }, 400);
+}
+
+function doSignup() {
+  const email = ID('sig-email').value;
+  const pass = ID('sig-pass').value;
+  const name = ID('sig-name').value;
+  if(!email || !pass || !name) { toast('Please fill out all details'); return; }
+
+  closeM();
+  setTimeout(() => {
+    toast('Account created successfully! 🎉');
+    document.querySelector('.bgs').textContent = "My Account";
+    document.querySelector('.bg').style.display = "none";
+  }, 400);
+}
+
+// ─── INIT ───
+renderHome();
+renderBrowse();
+</script>
+</body>
+</html>
